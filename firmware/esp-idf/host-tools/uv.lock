@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.12.13, <3.13"
 
 [[package]]
@@ -238,14 +238,15 @@ wheels = [
 
 [[package]]
 name = "esp-idf-nvs-partition-gen"
-version = "0.1.9"
+version = "0.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
+    { name = "esp-pylib", extra = ["cli"] },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7b/78/572dcca160714a4e60bee0db591f327c63df3bad3ecda22b410ed8ea5299/esp_idf_nvs_partition_gen-0.1.9.tar.gz", hash = "sha256:43a39b54b243189e91109a4e99968c864f32e20e0d7b9c33052bbd26a5f1690f", size = 24332, upload-time = "2025-04-22T12:58:25.774Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/84/c9/50173df772d5a0fffda5398247af1f8441b4378bbe45723fbccffbb0dd94/esp_idf_nvs_partition_gen-0.3.0.tar.gz", hash = "sha256:8394c0e5259f27f01104279371960e52e5bea708c5c0baae3b7dc5e521768d5d", size = 24497, upload-time = "2026-07-21T09:23:53.09Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/71/29/6d0c93dd2eca11491be5da86b9a50ff77c9deb09d9f521aab4c7d7ea79e6/esp_idf_nvs_partition_gen-0.1.9-py3-none-any.whl", hash = "sha256:9655b81dcfac034372bc00ac301f26830619abdd622949efb70cb7f78c80ba12", size = 22374, upload-time = "2025-04-22T12:58:24.616Z" },
+    { url = "https://files.pythonhosted.org/packages/36/40/9f64c3f4e046206900f65810ed95eaa168de90192b132ae5bde52c0b18b4/esp_idf_nvs_partition_gen-0.3.0-py3-none-any.whl", hash = "sha256:071c09b838cacb5562362e18e1cdf056d86a2611bb99e7d50de2b5054de33ac9", size = 22527, upload-time = "2026-07-21T09:23:52.284Z" },
 ]
 
 [[package]]
@@ -446,7 +447,7 @@ requires-dist = [
     { name = "esp-idf-diag", specifier = ">=0.2.0" },
     { name = "esp-idf-kconfig", specifier = ">=3.14.0" },
     { name = "esp-idf-monitor", specifier = ">=1.10.0" },
-    { name = "esp-idf-nvs-partition-gen", specifier = ">=0.1.9" },
+    { name = "esp-idf-nvs-partition-gen", specifier = ">=0.3.0" },
     { name = "esp-idf-panic-decoder", specifier = ">=1.5.0" },
     { name = "esp-idf-sbom", specifier = ">=1.5.0" },
     { name = "esp-idf-size", specifier = ">=2.3.2" },
