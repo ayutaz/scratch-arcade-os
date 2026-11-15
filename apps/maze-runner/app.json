@@ -1,0 +1,6 @@
+{
+  "id": "maze-runner",
+  "title": "Maze Runner",
+  "version": "1.0.0",
+  "capabilities": ["draw"]
+}

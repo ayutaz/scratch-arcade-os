@@ -1,0 +1,6 @@
+{
+  "id": "voice-recorder",
+  "title": "Voice Recorder",
+  "version": "1.0.0",
+  "capabilities": ["draw", "speaker", "microphone"]
+}

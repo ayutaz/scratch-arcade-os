@@ -1,0 +1,1 @@
+/* Values for individual console configurations are supplied by the test. */

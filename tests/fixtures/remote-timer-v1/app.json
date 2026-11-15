@@ -1,0 +1,6 @@
+{
+  "id": "remote-timer",
+  "title": "Remote Timer",
+  "version": "1.0.0",
+  "capabilities": ["draw", "network"]
+}

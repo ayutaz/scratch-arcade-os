@@ -1,0 +1,108 @@
+{
+  "profile": "scratch-arcade-s3-observed-v1",
+  "scope": "Settings observed on one tested ESP32-S3 board; not a generic Maker/LITE profile.",
+  "parts": {
+    "LCD": {
+      "host": 1,
+      "backlight": 21,
+      "sck": 12,
+      "mosi": 11,
+      "cs": 10,
+      "dc": 45,
+      "reset": 46,
+      "rotation": 3
+    },
+    "Sound": {
+      "sck": 41,
+      "ws": 42,
+      "data": 1
+    },
+    "Microphone": {
+      "sck": 47,
+      "data": 48
+    },
+    "Axes": {
+      "x": 6,
+      "y": 8
+    },
+    "Keys": {
+      "fn": 0,
+      "a": 39,
+      "b": 5,
+      "x": 9,
+      "y": 4
+    }
+  },
+  "lcd": {
+    "logical_size": [
+      320,
+      240
+    ],
+    "default_pclk_hz": 80000000,
+    "custom_init": [
+      {
+        "data_hex": "11",
+        "explicit_delay_ms": 120
+      },
+      {
+        "data_hex": "3a05",
+        "explicit_delay_ms": null
+      },
+      {
+        "data_hex": "b20c0c003333",
+        "explicit_delay_ms": null
+      },
+      {
+        "data_hex": "b735",
+        "explicit_delay_ms": null
+      },
+      {
+        "data_hex": "bb32",
+        "explicit_delay_ms": null
+      },
+      {
+        "data_hex": "c201",
+        "explicit_delay_ms": null
+      },
+      {
+        "data_hex": "c315",
+        "explicit_delay_ms": null
+      },
+      {
+        "data_hex": "c420",
+        "explicit_delay_ms": null
+      },
+      {
+        "data_hex": "c60f",
+        "explicit_delay_ms": null
+      },
+      {
+        "data_hex": "d0a4a1",
+        "explicit_delay_ms": null
+      },
+      {
+        "data_hex": "e0d0080e0909053133481714153134",
+        "explicit_delay_ms": null
+      },
+      {
+        "data_hex": "e1d0080e0909153133481714153134",
+        "explicit_delay_ms": null
+      },
+      {
+        "data_hex": "29",
+        "explicit_delay_ms": 100
+      }
+    ],
+    "rotation3_settings": {
+      "swap_xy": true,
+      "mirror_x": false,
+      "mirror_y": true,
+      "x_gap": 0,
+      "y_gap": 0,
+      "logical_size": [
+        320,
+        240
+      ]
+    }
+  }
+}

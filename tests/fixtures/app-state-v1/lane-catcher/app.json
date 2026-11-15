@@ -1,0 +1,10 @@
+{
+  "id": "lane-catcher",
+  "title": "Lane Catcher",
+  "version": "1.2.0",
+  "capabilities": [
+    "draw",
+    "speaker",
+    "storage"
+  ]
+}

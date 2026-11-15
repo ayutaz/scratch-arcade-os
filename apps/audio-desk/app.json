@@ -1,0 +1,6 @@
+{
+  "id": "audio-desk",
+  "title": "Audio Desk",
+  "version": "1.2.0",
+  "capabilities": ["draw", "speaker", "microphone"]
+}

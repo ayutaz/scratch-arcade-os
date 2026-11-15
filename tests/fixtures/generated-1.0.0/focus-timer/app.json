@@ -1,0 +1,6 @@
+{
+  "id": "focus-timer",
+  "title": "Focus Timer",
+  "version": "1.0.0",
+  "capabilities": ["draw"]
+}

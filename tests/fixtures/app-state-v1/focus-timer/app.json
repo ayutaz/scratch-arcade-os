@@ -1,0 +1,10 @@
+{
+  "id": "focus-timer",
+  "title": "Focus Timer",
+  "version": "1.2.0",
+  "capabilities": [
+    "draw",
+    "speaker",
+    "storage"
+  ]
+}
