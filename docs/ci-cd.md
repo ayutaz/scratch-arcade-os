@@ -63,8 +63,11 @@ uv run --locked python tools/test.py
 
 ローカルの追加契約は15件/skipなし成功。actionlint1.7.12（公式release digest照合）も成功。Python監査は最初IDFのcryptography48.0.1で失敗し、50.0.2へ更新して両lockとも検出0となった。[self-managed依存の理由](dependencies.md#idfのpython依存の保守)。公式idf_toolsの必要/推移依存チェックも成功し、S3ビルド910,368Bが成功した。今回の実機操作はない。
 
-全体ホスト試験は690件/skipなし成功（後続のactionlint契約1件は追加契約15件のGreenで確認）。main保護はAPIで実適用し、4check/app_id15368/strict、管理者適用、PR必須/承認0、未解決conversation必須、force push/削除不可をGETで照合した。PRのGitHub CI結果は後続に記録する。
+全体ホスト試験は690件/skipなし成功（85.793秒。後続のactionlint契約1件は追加契約15件のGreenで確認）。main保護はAPIで実適用し、4check/app_id15368/strict、管理者適用、PR必須/承認0、未解決conversation必須、force push/削除不可をGETで照合した。PRの実行状態は[GitHub Checks](https://github.com/ayutaz/scratch-arcade-os/pull/2/checks)で確認する。
 
 ## 根拠
 
 [GitHubのbranch保護](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches)、[workflow権限](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)、[uvのDependabot対応](https://docs.astral.sh/uv/guides/integration/dependabot/)、[pip-audit](https://github.com/pypa/pip-audit)。
+
+
+実sourceの別cloneにもローカル限定のv0.1.0タグを作り、配布CLIで361ファイルのsource archiveを生成した。README.ja.mdの収録、firmware/録音の不在、SHA-256一致を確認。fixtureのタグはpushせず、GitHub Releaseを作成していない。
