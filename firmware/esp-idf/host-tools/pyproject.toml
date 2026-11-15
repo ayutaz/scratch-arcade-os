@@ -3,7 +3,7 @@ name = "labos-idf-host"
 version = "0.1.0"
 requires-python = ">=3.12.13,<3.13"
 dependencies = [
-    "click>=8.4.2",
+    "click>=8.5.1",
     "construct>=2.10.70",
     "cryptography==50.0.2",
     "esp-coredump>=1.18.1",
