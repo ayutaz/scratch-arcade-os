@@ -5,7 +5,7 @@ requires-python = ">=3.12.13,<3.13"
 dependencies = [
     "click>=8.4.2",
     "construct>=2.10.70",
-    "cryptography>=48.0.1",
+    "cryptography>=50.0.0",
     "esp-coredump>=1.18.1",
     "esp-idf-diag>=0.2.0",
     "esp-idf-kconfig>=3.14.0",
