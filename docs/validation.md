@@ -29,4 +29,15 @@
 
 今回再buildした公開source版を実機へ再書込みした結果ではない。最新729fの聴取品質/実LCD/実キーを再確認したとは記載しない。フレーム数とCRCは音質/物理発色/入力の保証ではない。
 
-PSRAM全容量、実電断、無期限稼働、任意native fault、未知appの互換性、BLE/音声AIは未確認/未実装。新cloneの再現と公開対象/履歴の最終検査は、下の追記へ分けて記録する。
+PSRAM全容量、実電断、無期限稼働、任意native fault、未知appの互換性、BLE/音声AIは未確認/未実装。新cloneの再現と公開対象/履歴の最終検査は、次節へ記録する。
+
+
+## 新しいGit cloneでの再現
+
+初期source commit53a34ffをcacheなしの別ディレクトリへcloneし、READMEと同じuv sync→bootstrap --font→公開境界検査→tools/test.pyを実行した。公開upstreamから依存を取得し、元のPrivateプロジェクトのソース/依存cacheをコピーせずに**676件/skipなし成功（99.314秒）**を確認した。rootとIDFのPythonは分離uvで管理する。
+
+S3 buildは公開source treeで固定公開依存の既存cacheを複製して実施したもので、target toolchainをすべてネットから再取得した試験ではない。生成物のbyte完全一致も未検証。
+
+公開するGit indexだけを別領域へ書き出し、Gitleaks8.30.1で検査して検出0。新しいGit履歴も検出0。最初のcache込み走査が上流の試験データ等へ反応した結果は、公開sourceの漏洩と区別した。全追跡ファイルの境界検査・README等のローカル参照・diff検査も成功した。
+
+秘密情報検査は検出器が見つけられる形式に限られ、未知の秘密が絶対にないという保証ではない。source-onlyの公開で、firmware binary・実機の原本/録音/資格情報を含めない。[機械可読の結果](validation.json)。

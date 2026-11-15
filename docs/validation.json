@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-16 JST",
+  "source_tested_commit": "53a34ff",
+  "clean_clone": {
+    "host_tests": 676,
+    "skipped": 0,
+    "seconds": 99.314,
+    "source_and_dependencies_independent": true,
+    "passed": true
+  },
+  "target_build": {
+    "chip": "esp32s3",
+    "app_bytes": 910368,
+    "passed": true,
+    "previously_cached_public_idf_tools": true,
+    "binary_byte_reproducibility_tested": false,
+    "flashed": false
+  },
+  "secrets_scan": {
+    "tool": "gitleaks",
+    "version": "8.30.1",
+    "source_index_findings": 0,
+    "git_history_findings": 0
+  },
+  "device_accessed_this_release": false,
+  "stock_firmware_exported": false,
+  "recordings_exported": false,
+  "license": "Apache-2.0"
+}
