@@ -4,93 +4,78 @@ English | [日本語](README.ja.md)
 
 [![CI](https://github.com/ayutaz/scratch-arcade-os/actions/workflows/host-tests.yml/badge.svg)](https://github.com/ayutaz/scratch-arcade-os/actions/workflows/host-tests.yml)
 
-A small ESP32-S3 OS with a Japanese home screen and installable games and tools. Built on ESP-IDF/FreeRTOS and WAMR, it runs C99 applications compiled to WebAssembly.
+**Build games and tools on your Mac, then run them on a handheld ESP32-S3.**
 
-**Add and update individual apps without rebuilding the OS.** Test the same WASM on a Mac and use shared APIs for buttons, graphics, audio, persistent settings, and UDP on the device.
+Scratch Arcade OS provides a Japanese home screen where you can choose, launch, and close your apps. Add or update an app without rebuilding the OS.
 
-![Lane Catcher rendered from the same WASM on a Mac](docs/images/host-lane-catcher.png)
+![Lane Catcher running in the Mac simulator](docs/images/host-lane-catcher.png)
 
-This is a host-rendered image, not a device photograph. This independent experimental project is not official Scratch Arcade firmware.
+*Mac simulator screenshot. This is an independent project, not official Scratch Arcade firmware.*
 
-## Features
+## What you can do
 
-| Area | Implementation |
-|---|---|
-| Home | Fixed Japanese labels; select, launch, and close one foreground app |
-| Runtime | WAMR fast interpreter; instruction, bounds, capability, and API-call limits |
-| App management | USB transfer, SHA-256/ABI checks, individual updates, rollback versions, deletion, and GC |
-| Graphics and input | 320 x 240 RGB565 scanlines, rectangles, pressed/held/released events, and elapsed time |
-| Audio | Diagnostic tones, up to 2 seconds of RAM recording/playback, progress, and playback gain |
-| Storage | Eight int32 slots per app, alternating CRC records, persistence across normal restarts |
-| Network | OS-managed Wi-Fi STA and a fixed UDP peer; a Mac-controlled timer |
-| Development | Wasmtime/WAMR comparison, host fixtures, a Mac window, and TDD |
+- Play games with the device's buttons and joystick.
+- Keep high scores and timer settings across normal restarts.
+- Play sounds and record up to 2 seconds of audio in RAM.
+- Control a timer from your Mac over Wi-Fi.
 
-Earlier device development verified launch/close for 11 apps, score/settings persistence after restart, and 2-second recording/playback after Wi-Fi shutdown. The firmware rebuilt from this extracted public repository has not been flashed again. See [validation scope](docs/validation.md).
+Apps are written in C99 and compiled to WebAssembly. The OS uses ESP-IDF, FreeRTOS, and WAMR. See the [architecture](docs/architecture.md) for details.
 
-## Try it on a Mac
+## Try a game on your Mac
 
-Host tools currently target **macOS arm64, Python 3.12.13, and uv**.
+You need an **Apple Silicon Mac and [uv](https://docs.astral.sh/uv/getting-started/installation/)**. The project uses Python 3.12.13, managed by uv. No device is needed for this step.
 
 ```sh
 git clone https://github.com/ayutaz/scratch-arcade-os.git
 cd scratch-arcade-os
 uv sync --locked
 uv run --locked python tools/bootstrap.py --font
-uv run --locked python tools/test.py
-PYTHONPATH=prototypes/lab-os uv run --locked python -m labos.project check apps/lane-catcher
 PYTHONPATH=prototypes/lab-os uv run --locked python -m labos.project run apps/lane-catcher
 ```
 
-Bootstrap fetches pinned WAMR/littlefs commits, a checksum-verified Zig compiler, and the font when requested. It stops rather than overwriting mismatched dependencies. It does not access a device.
+The first setup downloads the pinned compiler, runtime, and font. The last command opens a game window.
 
-Controls: arrow keys; Z = A; R = X; X = B; F + X = FN + B. The default Mac window has no physical audio, network, or storage backend; related apps show their fallback state. It does not emulate ESP32 timing, the physical LCD, or audio quality.
+Use the arrow keys to move. **Z = A**, **R = X**, **X = B**, **F + X = FN + B**.
+
+The Mac simulator lets you check game logic and drawing. Device audio, network, and persistent storage are not connected in the default window; those apps show a fallback state. Device speed, LCD appearance, and sound quality need hardware tests.
 
 ## Included apps
 
-| App | Purpose |
+| App | What it does |
 |---|---|
-| [Maze Runner](apps/maze-runner/README.md) | Navigate around walls and collect targets |
-| [Audio Desk](apps/audio-desk/README.md) | Diagnostic tone, 500 ms recording/playback, and gain |
-| [Lane Catcher](apps/lane-catcher/README.md) | Three-lane game with a persistent high score |
-| [Focus Timer](apps/focus-timer/README.md) | 10-300 second timer with persistent settings |
-| [Voice Recorder](apps/voice-recorder/README.md) | 2-second RAM recording/playback |
-| [Remote Timer](apps/remote-timer/README.md) | Start, stop, and query from a Mac |
+| [Lane Catcher](apps/lane-catcher/README.md) | Catch targets in three lanes and save your best score |
+| [Maze Runner](apps/maze-runner/README.md) | Find a path around walls and collect targets |
+| [Focus Timer](apps/focus-timer/README.md) | Set a 10–300 second timer and keep your settings |
+| [Voice Recorder](apps/voice-recorder/README.md) | Record and play back 2 seconds of audio |
+| [Audio Desk](apps/audio-desk/README.md) | Try a test tone, short recording, and playback volume |
+| [Remote Timer](apps/remote-timer/README.md) | Start, stop, and query a timer from your Mac |
 
-The SDK also includes counter, game, microphone, network, and speaker examples. A new firmware build seeds only game and counter, not all 11 apps.
+Five smaller SDK examples are also included. A new firmware build starts with game and counter; the other apps are installed separately.
 
-## Build for ESP32-S3
+## Build for the device
+
+Hardware support currently targets **one observed Scratch Arcade ESP32-S3 board**. Check the [board information](boards/scratch-arcade/README.md) before planning an installation.
 
 ```sh
 uv run --locked python tools/bootstrap.py --idf
 uv sync --project firmware/esp-idf/host-tools --locked
 PYTHONPATH=prototypes/lab-os uv run --locked python -m labos.target build-candidate
-PYTHONPATH=prototypes/lab-os uv run --locked python -m labos.target size-candidate
 ```
 
-These are build-only commands. The board configuration covers one observed Scratch Arcade S3 device; compatibility with other Maker/LITE boards or PCB revisions and preservation of existing device data are not guaranteed. See [board scope](boards/scratch-arcade/README.md) and [development boundaries](docs/development.md). `scripts/flash.sh` always refuses. Stock restoration images and device-specific deployment tools are not included.
+This only builds the firmware. `scripts/flash.sh` refuses device writes. Device testing was done during earlier development; the public-source rebuild has not been flashed again. See [validation](docs/validation.md) and [development instructions](docs/development.md) for the tested scope and installation limits.
 
-## CI/CD and contributions
+## Make your own app
 
-Every PR and main update runs repository checks, host tests, an ESP32-S3 build, and Python dependency audits. Weekly runs catch upstream changes. Main requires a PR and all four checks, including for administrators; a second reviewer is not required for solo development.
+Start with the [SDK and app guide](docs/development.md). To run the host tests:
 
-A `vMAJOR.MINOR.PATCH` tag matching the project version re-runs CI before publishing a source archive and SHA-256 checksum. Firmware binaries are not published. See [CI/CD and branch protection](docs/ci-cd.md) and [contribution workflow](CONTRIBUTING.md).
+```sh
+uv run --locked python tools/test.py
+```
 
-## Layout
+[Contributing](CONTRIBUTING.md) covers TDD and the PR workflow. CI checks the repository, host tests, ESP32-S3 build, and Python dependencies. Main requires all four checks. Version tags can publish source archives and checksums; see [CI/CD](docs/ci-cd.md).
 
-| Path | Contents |
-|---|---|
-| `prototypes/lab-os/native/` | Shared C services, VM, home, filesystem, and USB protocol |
-| `prototypes/lab-os/sdk/` | C99 SDK and five basic apps |
-| `prototypes/lab-os/labos/` | Mac tools, builders, both VMs, and transfer client |
-| `firmware/esp-idf/` | Target candidate, finite core, shared BSP, and separate uv environment |
-| `boards/scratch-arcade/` | Limited board profile and remaining unknowns |
-| `apps/` / `tests/` | Six additional apps and host contract/fault tests |
-| `tools/` | Pinned dependency setup, strict test runner, repository checks, and source packaging |
+Detailed engineering documents are currently in Japanese.
 
-[SDK and development](docs/development.md) · [Architecture](docs/architecture.md) · [Validation](docs/validation.md) · [Dependencies](docs/dependencies.md). Detailed engineering documents are currently in Japanese.
+## License
 
-## License and scope
-
-Original code is licensed under [Apache-2.0](LICENSE). Third-party code, the MicroPython-derived ASCII font, and Noto-derived glyphs retain their respective licenses. See [NOTICE](NOTICE) and [third-party notices](THIRD_PARTY_NOTICES.md).
-
-Stock firmware, extracted code, raw Flash backups, recordings, Wi-Fi credentials, and personal device identifiers are not distributed. OS OTA, complete native-app isolation, arbitrary Japanese text input, BLE, and ASR/TTS remain unimplemented or unverified.
+Original code is [Apache-2.0](LICENSE). Third-party code and fonts keep their own licenses; see [NOTICE](NOTICE) and [third-party notices](THIRD_PARTY_NOTICES.md).
