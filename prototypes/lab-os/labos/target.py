@@ -62,6 +62,9 @@ def environment(base=None):
             TOOLS / 'tools/ninja/1.12.1']
     env.update(IDF_PATH=str(IDF), IDF_TOOLS_PATH=str(TOOLS),
                ESP_IDF_VERSION='6.1', IDF_TARGET='esp32s3',
+               # Official self-managed mode: uv.lock pins audited versions;
+               # idf_tools still checks required packages and transitive requirements.
+               IDF_PYTHON_CHECK_CONSTRAINTS='0',
                ESP_ROM_ELF_DIR=str(TOOLS / 'tools/esp-rom-elfs/20241011'),
                IDF_PYTHON_ENV_PATH=str(HOST / '.venv'),
                PATH=os.pathsep.join(map(str, bins)) + os.pathsep + env.get('PATH', '/usr/bin:/bin'))

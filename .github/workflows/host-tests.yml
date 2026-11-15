@@ -1,20 +1,135 @@
-name: Host tests
-on: [push, pull_request, workflow_dispatch]
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+  schedule:
+    - cron: '23 4 * * 1'
 permissions:
   contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+defaults:
+  run:
+    shell: bash
 jobs:
+  quality:
+    name: Repository checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.23'
+          enable-cache: false
+      - name: Locked dependencies and policy contracts
+        run: |
+          uv sync --locked
+          uv lock --check
+          uv lock --project firmware/esp-idf/host-tools --check
+          uv run --locked python -m unittest discover -s tests -p 'test_ci*.py' -v
+      - name: Validate workflow syntax
+        run: |
+          curl --fail --silent --show-error --location --retry 3 \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
+            --output "$RUNNER_TEMP/actionlint.tar.gz"
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $RUNNER_TEMP/actionlint.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" -color
+      - name: Documentation and public source boundary
+        run: |
+          uv run --locked python tools/check_repository.py
+          uv run --locked python tools/publication_check.py
+          git diff --exit-code
   host:
+    name: Host tests
     runs-on: macos-15
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Install uv
-        run: brew install uv
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.23'
+          enable-cache: false
       - name: Prepare pinned dependencies
         run: |
           uv sync --locked
           uv run --locked python tools/bootstrap.py --font
-      - name: Public source boundary
-        run: uv run --locked python tools/publication_check.py
       - name: Host tests (no skipped prerequisites)
-        run: uv run --locked python tools/test.py
+        run: |
+          mkdir -p reports/ci
+          uv run --locked python tools/test.py 2>&1 | tee reports/ci/host-tests.log
+      - name: Preserve host test report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: host-test-report
+          path: reports/ci/host-tests.log
+          retention-days: 14
+          if-no-files-found: error
+  target:
+    name: ESP32-S3 build
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.23'
+          enable-cache: false
+      - name: Prepare pinned ESP-IDF toolchain
+        run: |
+          uv sync --locked
+          uv run --locked python tools/bootstrap.py --idf
+          uv sync --project firmware/esp-idf/host-tools --locked
+      - name: Build and measure (no device access)
+        run: |
+          mkdir -p reports/ci
+          PYTHONPATH=prototypes/lab-os uv run --locked python -m labos.target build-candidate
+          PYTHONPATH=prototypes/lab-os uv run --locked python -m labos.target size-candidate 2>&1 | tee reports/ci/target-size.txt
+      - name: Preserve size report only
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: esp32s3-size-report
+          path: reports/ci/target-size.txt
+          retention-days: 14
+          if-no-files-found: error
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.23'
+          enable-cache: false
+      - name: Audit both locked Python dependency sets
+        run: |
+          mkdir -p reports/ci
+          uv export --locked --all-groups --no-emit-project --no-hashes --output-file reports/ci/root-requirements.txt
+          uv export --project firmware/esp-idf/host-tools --locked --no-emit-project --no-hashes --output-file reports/ci/idf-requirements.txt
+          uvx --from pip-audit==2.10.1 pip-audit --disable-pip --no-deps -r reports/ci/root-requirements.txt --format json --output reports/ci/root-audit.json
+          uvx --from pip-audit==2.10.1 pip-audit --disable-pip --no-deps -r reports/ci/idf-requirements.txt --format json --output reports/ci/idf-audit.json
+      - name: Preserve dependency audit reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dependency-audit-reports
+          path: |
+            reports/ci/root-audit.json
+            reports/ci/idf-audit.json
+          retention-days: 14
+          if-no-files-found: error
