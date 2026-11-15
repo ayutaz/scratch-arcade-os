@@ -11,3 +11,5 @@
 - Apache-2.0と第三者license/著作権表示を維持する。フォント派生データはOFLの境界を保つ。
 - 機能単位で検証/差分確認/commit/push。mainへ直接pushせず、作業branchとPRを使い、必須CI成功後に通常mergeする。管理者の迂回merge・履歴改変・force pushは行わない。
 - CI/CDとmain保護の正本はdocs/ci-cd.mdと.github/main-protection.json。検査失敗をcontinue-on-errorやskipで成功扱いにしない。新Releaseは版と対象を確認し、source-onlyの境界を維持する。
+
+- READMEは初めて読む人向けに、できること・Macでの試し方・実機との違いを先に示す。内部API上限、ディレクトリ一覧、詳細な検証履歴はdocsへ置き、英語版と日本語版を同期する。
