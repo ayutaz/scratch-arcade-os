@@ -1,33 +1,35 @@
 # Scratch Arcade OS
 
-[![Host tests](https://github.com/ayutaz/scratch-arcade-os/actions/workflows/host-tests.yml/badge.svg)](https://github.com/ayutaz/scratch-arcade-os/actions/workflows/host-tests.yml)
+English | [日本語](README.ja.md)
 
-ESP32-S3向けの、日本語ホームと後付けアプリを持つ小型OSです。ESP-IDF/FreeRTOSとWAMRを使い、ゲームやツールをC99→WebAssemblyで追加します。
+[![CI](https://github.com/ayutaz/scratch-arcade-os/actions/workflows/host-tests.yml/badge.svg)](https://github.com/ayutaz/scratch-arcade-os/actions/workflows/host-tests.yml)
 
-**OS全体を再ビルドせずに、アプリを追加・個別更新できます。** Mac上で同じWASMを検証し、本体ではボタン操作・描画・音声・設定保存・UDP通信を共通APIから扱います。
+A small ESP32-S3 OS with a Japanese home screen and installable games and tools. Built on ESP-IDF/FreeRTOS and WAMR, it runs C99 applications compiled to WebAssembly.
 
-![Mac上で同じWASMから描画したLane Catcher](docs/images/host-lane-catcher.png)
+**Add and update individual apps without rebuilding the OS.** Test the same WASM on a Mac and use shared APIs for buttons, graphics, audio, persistent settings, and UDP on the device.
 
-画像はMac上の描画で、実機の撮影ではありません。独立した実験プロジェクトであり、Scratch Arcadeの公式ファームウェアではありません。
+![Lane Catcher rendered from the same WASM on a Mac](docs/images/host-lane-catcher.png)
 
-## 機能
+This is a host-rendered image, not a device photograph. This independent experimental project is not official Scratch Arcade firmware.
 
-| 分野 | 実装 |
+## Features
+
+| Area | Implementation |
 |---|---|
-| ホーム | 固定日本語、アプリ選択・起動・終了、前面1本 |
-| Runtime | WAMR fast interpreter、命令数/bounds/権限/API回数の上限 |
-| アプリ管理 | USB転送、SHA-256/ABI検査、個別更新・旧版・削除・GC |
-| 描画/入力 | 320×240 RGB565の行描画、矩形API、押下/保持/解放・実時間 |
-| 音声 | 診断音、最大2秒のRAM録音/再生、進捗、再生ゲイン |
-| 保存 | アプリごとの8×int32、交互CRC記録、通常再起動後の保持 |
-| 通信 | OS管理のWi-Fi STA/固定UDP peer、Mac連携タイマー |
-| 開発 | Wasmtime/WAMR比較、ホストAPI fixture、Macウィンドウ、TDD |
+| Home | Fixed Japanese labels; select, launch, and close one foreground app |
+| Runtime | WAMR fast interpreter; instruction, bounds, capability, and API-call limits |
+| App management | USB transfer, SHA-256/ABI checks, individual updates, rollback versions, deletion, and GC |
+| Graphics and input | 320 x 240 RGB565 scanlines, rectangles, pressed/held/released events, and elapsed time |
+| Audio | Diagnostic tones, up to 2 seconds of RAM recording/playback, progress, and playback gain |
+| Storage | Eight int32 slots per app, alternating CRC records, persistence across normal restarts |
+| Network | OS-managed Wi-Fi STA and a fixed UDP peer; a Mac-controlled timer |
+| Development | Wasmtime/WAMR comparison, host fixtures, a Mac window, and TDD |
 
-元の実機開発で11本の起動/終了、スコア/設定の再起動保持、Wi-Fi停止後の2秒録再を確認しました。今回切り出したソースの再ビルド品を実機へ再書込みしたものではありません。[検証範囲](docs/validation.md)。
+Earlier device development verified launch/close for 11 apps, score/settings persistence after restart, and 2-second recording/playback after Wi-Fi shutdown. The firmware rebuilt from this extracted public repository has not been flashed again. See [validation scope](docs/validation.md).
 
-## Macで試す
+## Try it on a Mac
 
-現在のホストツールは**macOS arm64、Python3.12.13、uv**を対象にしています。
+Host tools currently target **macOS arm64, Python 3.12.13, and uv**.
 
 ```sh
 git clone https://github.com/ayutaz/scratch-arcade-os.git
@@ -39,24 +41,24 @@ PYTHONPATH=prototypes/lab-os uv run --locked python -m labos.project check apps/
 PYTHONPATH=prototypes/lab-os uv run --locked python -m labos.project run apps/lane-catcher
 ```
 
-bootstrapは固定commitのWAMR/littlefs、checksum付きZig、指定時のフォントを取得します。既存依存の版や内容が違えば上書きせず停止します。実機には接続しません。
+Bootstrap fetches pinned WAMR/littlefs commits, a checksum-verified Zig compiler, and the font when requested. It stops rather than overwriting mismatched dependencies. It does not access a device.
 
-Macの操作は矢印、Z=A、R=X、X=B、F+X=FN+B。標準ウィンドウの音声/通信/保存backendは未接続なので、対応APIの未接続表示は想定内です。ESP32の速度・実LCD・音質のエミュレーターではありません。
+Controls: arrow keys; Z = A; R = X; X = B; F + X = FN + B. The default Mac window has no physical audio, network, or storage backend; related apps show their fallback state. It does not emulate ESP32 timing, the physical LCD, or audio quality.
 
-## 付属アプリ
+## Included apps
 
-| アプリ | 内容 |
+| App | Purpose |
 |---|---|
-| [Maze Runner](apps/maze-runner/README.md) | 壁を迂回して目標を集める |
-| [Audio Desk](apps/audio-desk/README.md) | 診断音・500ms録音/再生・ゲイン |
-| [Lane Catcher](apps/lane-catcher/README.md) | 3レーンゲーム・最高得点保存 |
-| [Focus Timer](apps/focus-timer/README.md) | 10〜300秒タイマー・設定保存 |
-| [Voice Recorder](apps/voice-recorder/README.md) | RAM内2秒録音/再生 |
-| [Remote Timer](apps/remote-timer/README.md) | Macから開始・停止・照会 |
+| [Maze Runner](apps/maze-runner/README.md) | Navigate around walls and collect targets |
+| [Audio Desk](apps/audio-desk/README.md) | Diagnostic tone, 500 ms recording/playback, and gain |
+| [Lane Catcher](apps/lane-catcher/README.md) | Three-lane game with a persistent high score |
+| [Focus Timer](apps/focus-timer/README.md) | 10-300 second timer with persistent settings |
+| [Voice Recorder](apps/voice-recorder/README.md) | 2-second RAM recording/playback |
+| [Remote Timer](apps/remote-timer/README.md) | Start, stop, and query from a Mac |
 
-SDKの基本5本（counter/game/microphone/network/speaker）も収録しています。新規ビルドのseedはgame/counterの2本で、11本を初期インストールしたimageではありません。
+The SDK also includes counter, game, microphone, network, and speaker examples. A new firmware build seeds only game and counter, not all 11 apps.
 
-## ESP32-S3ビルド
+## Build for ESP32-S3
 
 ```sh
 uv run --locked python tools/bootstrap.py --idf
@@ -65,24 +67,30 @@ PYTHONPATH=prototypes/lab-os uv run --locked python -m labos.target build-candid
 PYTHONPATH=prototypes/lab-os uv run --locked python -m labos.target size-candidate
 ```
 
-これはビルド専用です。対応は観測した1台のScratch Arcade系S3基板の設定に限ります。Maker/LITEやPCB Rev全般への互換性、既存データを保った移行は保証していません。[基板設定](boards/scratch-arcade/README.md)・[ビルド/導入の境界](docs/development.md)。`scripts/flash.sh`は常に拒否し、純正復元imageや実機固有の配備ツールは含めません。
+These are build-only commands. The board configuration covers one observed Scratch Arcade S3 device; compatibility with other Maker/LITE boards or PCB revisions and preservation of existing device data are not guaranteed. See [board scope](boards/scratch-arcade/README.md) and [development boundaries](docs/development.md). `scripts/flash.sh` always refuses. Stock restoration images and device-specific deployment tools are not included.
 
-## 構成
+## CI/CD and contributions
 
-| 場所 | 内容 |
+Every PR and main update runs repository checks, host tests, an ESP32-S3 build, and Python dependency audits. Weekly runs catch upstream changes. Main requires a PR and all four checks, including for administrators; a second reviewer is not required for solo development.
+
+A `vMAJOR.MINOR.PATCH` tag matching the project version re-runs CI before publishing a source archive and SHA-256 checksum. Firmware binaries are not published. See [CI/CD and branch protection](docs/ci-cd.md) and [contribution workflow](CONTRIBUTING.md).
+
+## Layout
+
+| Path | Contents |
 |---|---|
-| `prototypes/lab-os/native/` | OS共通Cサービス、VM、Home、FS、USB protocol |
-| `prototypes/lab-os/sdk/` | C99 SDK・基本5アプリ |
-| `prototypes/lab-os/labos/` | Macツール、ビルダー、両VM、転送client |
-| `firmware/esp-idf/` | 実機用candidate、有限core、共有BSP、分離uv |
-| `boards/scratch-arcade/` | 対象を限定した設定と未確認事項 |
-| `apps/` / `tests/` | 追加6アプリとホスト契約/異常系試験 |
-| `tools/` | 固定依存取得、skipを拒否する試験runner、公開境界検査 |
+| `prototypes/lab-os/native/` | Shared C services, VM, home, filesystem, and USB protocol |
+| `prototypes/lab-os/sdk/` | C99 SDK and five basic apps |
+| `prototypes/lab-os/labos/` | Mac tools, builders, both VMs, and transfer client |
+| `firmware/esp-idf/` | Target candidate, finite core, shared BSP, and separate uv environment |
+| `boards/scratch-arcade/` | Limited board profile and remaining unknowns |
+| `apps/` / `tests/` | Six additional apps and host contract/fault tests |
+| `tools/` | Pinned dependency setup, strict test runner, repository checks, and source packaging |
 
-[SDKと制作手順](docs/development.md)・[アーキテクチャ](docs/architecture.md)・[検証](docs/validation.md)・[依存](docs/dependencies.md)。
+[SDK and development](docs/development.md) · [Architecture](docs/architecture.md) · [Validation](docs/validation.md) · [Dependencies](docs/dependencies.md). Detailed engineering documents are currently in Japanese.
 
-## ライセンス
+## License and scope
 
-自作コードは[Apache-2.0](LICENSE)。第三者コード・MicroPython由来ASCIIフォント・Noto由来字形は、それぞれのライセンスを維持します。[NOTICE](NOTICE)・[第三者の権利表示](THIRD_PARTY_NOTICES.md)。
+Original code is licensed under [Apache-2.0](LICENSE). Third-party code, the MicroPython-derived ASCII font, and Noto-derived glyphs retain their respective licenses. See [NOTICE](NOTICE) and [third-party notices](THIRD_PARTY_NOTICES.md).
 
-純正ファームウェア、抽出コード、Flash原本、録音、Wi-Fi認証情報、個人の実機識別子は配布しません。OS OTA、任意nativeアプリの完全隔離、任意の日本語文字入力、BLE、ASR/TTSは未実装/未検証の範囲です。
+Stock firmware, extracted code, raw Flash backups, recordings, Wi-Fi credentials, and personal device identifiers are not distributed. OS OTA, complete native-app isolation, arbitrary Japanese text input, BLE, and ASR/TTS remain unimplemented or unverified.

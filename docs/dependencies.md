@@ -11,3 +11,12 @@
 取得URL/checksumは[bootstrap.py](../tools/bootstrap.py)、Python依存は[uv.lock](../uv.lock)、IDFのPythonは[分離lock](../firmware/esp-idf/host-tools/uv.lock)。フォント原本は字形再生成テスト用で、生成済み字形はsource releaseに含める。
 
 [第三者NOTICE](../THIRD_PARTY_NOTICES.md)と[component別のlicense/copyright一覧](linked-license-inventory.json)を参照。source releaseには純正binary、抽出コード、上流依存cache、録音/秘密情報を含めない。CIのmacOS arm64選択は[GitHub公式runner表](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)に基づく。
+
+
+## IDFのPython依存の保守
+
+CIの既知脆弱性監査でcryptography48.0.1に3種類の既知問題（照合結果は重複を含み6件）が見つかり、50.0.2へ固定更新した。root側には既知の検出はなかった。
+
+固定IDF v6.1の取得済みconstraintsはcryptography<49を要求するため、公式のself-managed mode（IDF_PYTHON_CHECK_CONSTRAINTS=0）を使い、IDF用uv.lockで全依存を管理する。constraints原本のchecksum検査は維持し、内容を改変しない。これは上流の版上限を外す指定であり、idf_toolsの必要パッケージ/推移依存チェックを止める指定ではない。新しい版の互換性は依存検査とS3ビルドで確認し、脆弱性をignoreして通さない。
+
+根拠: [公式idf_tools.pyのself-managed設定](https://github.com/espressif/esp-idf/blob/fff9895c82d744c7237be8847347bdd1b07c6643/tools/idf_tools.py)、[cryptography修正履歴](https://cryptography.io/en/latest/changelog/)。監査は既知のPython問題が対象で、IDF/C依存全体の安全性を保証しない。

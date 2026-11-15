@@ -11,5 +11,6 @@ dev = [
     "pyelftools==0.33",
     "pygame-ce==2.5.8",
     "pyserial==3.5",
+    "pyyaml==6.0.3",
     "wasmtime==50.0.1",
 ]
