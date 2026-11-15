@@ -23,7 +23,7 @@
 
 ## Macでゲームを試す
 
-必要なのは**Apple SiliconのMacと[uv](https://docs.astral.sh/uv/getting-started/installation/)**です。Pythonはuvで管理し、3.12.13を使用します。この手順では実機は不要です。
+必要なのは**Apple SiliconのMac、Git、[uv](https://docs.astral.sh/uv/getting-started/installation/)**です。Pythonはuvで管理し、3.12.13を使用します。この手順では実機は不要です。
 
 ```sh
 git clone https://github.com/ayutaz/scratch-arcade-os.git
@@ -33,7 +33,7 @@ uv run --locked python tools/bootstrap.py --font
 PYTHONPATH=prototypes/lab-os uv run --locked python -m labos.project run apps/lane-catcher
 ```
 
-初回は指定バージョンのコンパイラー・実行環境・フォントを取得します。最後のコマンドでゲームのウィンドウが開きます。
+初回は指定バージョンのコンパイラー・実行環境・フォントを取得します。最後のコマンドでランチャーが開きます。**Z（A）**でLane Catcherを開き、もう一度押すとゲームが始まります。
 
 移動は矢印キーです。**Z＝A、R＝X、X＝B、F＋X＝FN＋B**に対応します。
 

@@ -23,7 +23,7 @@ Apps are written in C99 and compiled to WebAssembly. The OS uses ESP-IDF, FreeRT
 
 ## Try a game on your Mac
 
-You need an **Apple Silicon Mac and [uv](https://docs.astral.sh/uv/getting-started/installation/)**. The project uses Python 3.12.13, managed by uv. No device is needed for this step.
+You need an **Apple Silicon Mac, Git, and [uv](https://docs.astral.sh/uv/getting-started/installation/)**. The project uses Python 3.12.13, managed by uv. No device is needed for this step.
 
 ```sh
 git clone https://github.com/ayutaz/scratch-arcade-os.git
@@ -33,7 +33,7 @@ uv run --locked python tools/bootstrap.py --font
 PYTHONPATH=prototypes/lab-os uv run --locked python -m labos.project run apps/lane-catcher
 ```
 
-The first setup downloads the pinned compiler, runtime, and font. The last command opens a game window.
+The first setup downloads the pinned compiler, runtime, and font. The last command opens the launcher. Press **Z (A)** to open Lane Catcher, then press it again to start a round.
 
 Use the arrow keys to move. **Z = A**, **R = X**, **X = B**, **F + X = FN + B**.
 
