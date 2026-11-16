@@ -41,3 +41,10 @@ S3 buildは公開source treeで固定公開依存の既存cacheを複製して�
 公開するGit indexだけを別領域へ書き出し、Gitleaks8.30.1で検査して検出0。新しいGit履歴も検出0。最初のcache込み走査が上流の試験データ等へ反応した結果は、公開sourceの漏洩と区別した。全追跡ファイルの境界検査・README等のローカル参照・diff検査も成功した。
 
 秘密情報検査は検出器が見つけられる形式に限られ、未知の秘密が絶対にないという保証ではない。source-onlyの公開で、firmware binary・実機の原本/録音/資格情報を含めない。[機械可読の結果](validation.json)。
+
+## 2026-11-17: 日本語音声serviceの候補
+
+[音声serviceのTDD/資源](voice-service.md)を追加。固定KWS、事前生成5返答、
+権限/共有quota、録音消費後の消去、cleanup失敗の保持をホストで検証した。
+ターゲット候補966,016B、PSRAM/GPIO/配置は変更なし。実機適用・実声・聴取は未実施。
+古いvalidation.jsonとリンク棚卸しは当時の結果として保持する。

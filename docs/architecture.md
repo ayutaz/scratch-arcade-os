@@ -30,3 +30,8 @@ source SDKは[lab_os.h](../prototypes/lab-os/sdk/lab_os.h)。ABI2のままoption
 NVSへのWi-Fi/PHY保存とPSRAMは無効。OS slot1MiB＋専用LittleFS1MiB、OS OTAなし。これは純正パーティション配置ではなく、自動で安全に移行できるレイアウトでもない。
 
 [検証範囲](validation.md)を参照。CPU上限/リンク時空き/実heap、hostのVM pool実容量とS3値を混同しない。
+
+## 日本語音声の候補実装
+
+[voice service](voice-service.md)は完了録音の分類と固定返答を既存音声leaseへ接続する。
+ホスト/S3 buildまでで、実機への適用は別の固定imageレビューと個別許可を要する。

@@ -12,6 +12,9 @@ idf_component_register(
        "${LAB_ROOT}/prototypes/lab-os/native/guest_vm.c"
        "${LAB_ROOT}/prototypes/lab-os/native/audio_service.c"
        "${LAB_ROOT}/prototypes/lab-os/native/audio_binding.c"
+       "${LAB_ROOT}/prototypes/lab-os/native/voice_service.c"
+       "${LAB_ROOT}/components/voice/kws_features.c"
+       "${LAB_ROOT}/components/voice/kws_inference.c"
        "${LAB_ROOT}/prototypes/lab-os/native/state_service.c"
        "${LAB_ROOT}/prototypes/lab-os/native/state_binding.c"
        "${LAB_ROOT}/prototypes/lab-os/native/state_lfs.c"
@@ -24,7 +27,7 @@ idf_component_register(
        "${LAB_ROOT}/prototypes/lab-os/native/input.c"
        "${LAB_ROOT}/prototypes/lab-os/native/run_loop.c"
   INCLUDE_DIRS "${LAB_ROOT}/prototypes/lab-os/native" "${CMAKE_BINARY_DIR}/generated"
-               "${LAB_ROOT}/assets/fonts"
+               "${LAB_ROOT}/assets/fonts" "${LAB_ROOT}/components/voice"
   REQUIRES wamr lab_littlefs esp_driver_usb_serial_jtag esp_driver_gpio esp_driver_spi esp_lcd
            esp_adc esp_driver_i2s esp_partition spi_flash esp_system freertos mbedtls
            esp_wifi esp_netif esp_event)

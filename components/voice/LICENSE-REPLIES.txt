@@ -1,0 +1,13 @@
+SPDX-License-Identifier: CC-BY-3.0
+
+Generated with NIT ATR503 M001 HTS Voice, HTS Working Group.
+Copyright (c) 2003-2012 Nagoya Institute of Technology, Department of Computer Science.
+Copyright (c) 2003-2008 Tokyo Institute of Technology, Interdisciplinary Graduate School of Science and Engineering.
+
+Licensed under Creative Commons Attribution 3.0 Unported:
+https://creativecommons.org/licenses/by/3.0/
+Full legal code: https://creativecommons.org/licenses/by/3.0/legalcode
+
+Changes: text synthesis, DC removal, low-pass filtering, resampling, linear PCM8 quantization and fades.
+No endorsement by the original authors or institutions is implied.
+Implementation code is separately licensed under Apache-2.0.

@@ -19,6 +19,11 @@ int lab_audio_binding_poll(LabAudioBinding *s,uint32_t now) {
 int lab_audio_binding_call(LabAudioBinding *s,uint32_t op,uint32_t a,uint32_t b) {
     if(!s || !s->audio || s->audio->owner!=s->owner)return -1;
     LabAudio *audio=s->audio;
+    if(op==LAB_VM_AUDIO_CLASSIFY || op==LAB_VM_AUDIO_REPLY) {
+        uint32_t required=op==LAB_VM_AUDIO_CLASSIFY ? LAB_AUDIO_CAN_RECORD:LAB_AUDIO_CAN_PLAY;
+        if(!(s->permissions&required) || (op==LAB_VM_AUDIO_REPLY && a>4) || !audio->voice_call)return -1;
+        return audio->voice_call(audio->voice_context,audio,s->owner,op,a,s->now);
+    }
     if(op==LAB_VM_AUDIO_SET_GAIN) {
         if(!(s->permissions&LAB_AUDIO_CAN_PLAY) || a>8)return -1;
         return lab_audio_set_gain(audio,s->owner,a);

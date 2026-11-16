@@ -1,0 +1,41 @@
+{
+  "repository": "https://github.com/ayutaz/arcade-ai-pet",
+  "commit": "975ef913f91c417cd715c23eae8099c140d965db",
+  "files": {
+    "pet_kws.h": {
+      "source": "native/pet_kws.h",
+      "sha256": "d357f391888bbb28d84ca5e9afbd3742ba6f73d282446479192684ff3a156c90"
+    },
+    "kws_features.c": {
+      "source": "native/features.c",
+      "sha256": "f42724ce43199acbe8abae2f2d2c579a969861ee98eb8cfcc7b0086d389a19c0"
+    },
+    "kws_inference.c": {
+      "source": "native/inference.c",
+      "sha256": "37e2c27afc2711caed44311859686a9072b2d181976850b0780b57a7b884d905"
+    },
+    "feature_tables.h": {
+      "source": "models/kws-v2/feature_tables.h",
+      "sha256": "f880061b75d258240508ca9b8ca11d519c708e8643858a83d0128487b6e20edf"
+    },
+    "pet_model.h": {
+      "source": "models/kws-v2/pet_model.h",
+      "sha256": "946bcf467df0de6473b69461340e02fe85af685f58aeefbbcc2058126b086686"
+    },
+    "replies.h": {
+      "source": "assets/replies-v1/replies.h",
+      "sha256": "5aba2a8873fbc858f10e4b19c560f2a6aad454f66088ef512955f4be9a22ecdb"
+    },
+    "LICENSE-KWS.txt": {
+      "source": "models/kws-v2/LICENSE.txt",
+      "sha256": "ed1be839daaf85b8be4e890c2a765a239ac44995558972f6a211b8beadb2d55d"
+    },
+    "LICENSE-REPLIES.txt": {
+      "source": "assets/replies-v1/LICENSE.txt",
+      "sha256": "3cf896d6518c72efd4dbdbd0cc8f7d9cb9af6404d1e28ec6875b16c92cc1d3ec"
+    }
+  },
+  "weights_bytes": 17380,
+  "reply_bytes": 25418,
+  "device_tested": false
+}

@@ -14,3 +14,10 @@
 ホストPython依存とtoolchainはuv.lock/固定取得元に従い、依存自体の権利表示も維持する。IDFのcomponent別licenseは元開発のtarget buildからesp-idf-sbomで棚卸しし、公開情報であるname/license/copyrightだけを一覧化した。機器情報やローカルpathはない。この一覧は自作コードへの一括再ライセンスではなく、今後binaryを再配布する場合は、その成果物の依存/表示を改めて照合する。
 
 Apacheの適用/NOTICEについては[ASF公式](https://www.apache.org/legal/apply-license.html)、条文は[Apache License2.0](https://www.apache.org/licenses/LICENSE-2.0.html)を参照する。
+
+## 固定日本語音声モデルと返答
+
+[components/voice/NOTICE.md](components/voice/NOTICE.md)に上流commit/hash、
+HTS Voice Mei/M001の帰属、CC BY 3.0と加工内容を記載。
+docs/linked-license-inventory.jsonは初回ESP-IDFリンク時の棚卸しで、この後続追加を含まない。
+現在の配布条件には本componentの条件も合わせる。

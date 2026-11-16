@@ -124,7 +124,7 @@ class Session:
         i32=wasmtime.ValType.i32()
         for name,op,n in [('audio_tone',1,2),('audio_record',2,1),('audio_play',3,0),
                           ('audio_state',4,0),('audio_level',5,0),('audio_stop',6,0),('audio_position',7,0),
-                          ('audio_set_gain',8,1)]:
+                          ('audio_set_gain',8,1),('audio_classify',9,0),('audio_reply',10,1)]:
             linker.define_func('os',name,wasmtime.FuncType([i32]*n,[i32]),
                                lambda *args,op=op:self._audio(op,*(list(args)+[0]*(2-len(args)))))
         for name,op,n in [('network_send',1,2),('network_receive',2,2),('network_state',3,0)]:
@@ -163,7 +163,7 @@ class Session:
         self.state_result=status
         return (value if status==1 else fallback) if op==1 else status
     def _audio(self,op,a,b):
-        required=2 if op in (1,3,8) else 4 if op in (2,5) else 6
+        required=2 if op in (1,3,8,10) else 4 if op in (2,5,9) else 6
         if not self.audio_caps&required:raise wasmtime.Trap('audio permission')
         if op in (4,5,7):
             self.audio_queries+=1
@@ -171,10 +171,10 @@ class Session:
         else:
             self.audio_mutations+=1
             if self.audio_mutations>2:raise wasmtime.Trap('audio per-frame quota')
-        if (op==1 and not (200<=a<=4000 and 20<=b<=1000)) or (op==2 and not 1<=a<=2000) or (op==8 and not 0<=a<=8):return -1
+        if (op==1 and not (200<=a<=4000 and 20<=b<=1000)) or (op==2 and not 1<=a<=2000) or (op==8 and not 0<=a<=8) or (op==10 and not 0<=a<=4):return -1
         if self.audio is None:return -1
         value=self.audio.call(op,a,b)
-        maximum=4 if op==4 else 32768 if op==5 else 32000 if op==7 else 1
+        maximum=6 if op==9 else 4 if op==4 else 32768 if op==5 else 32000 if op==7 else 1
         if type(value) is not int or not -1<=value<=maximum:raise wasmtime.Trap('audio service contract')
         return value
     def _network(self,caller,op,address,length):

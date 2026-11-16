@@ -19,7 +19,7 @@ typedef struct {
     int (*drained)(void *); /* 1 completed, 0 pending, -1 error. */
     int (*close)(void *);   /* 1 released, 0 retains ownership. */
 } LabAudioIo;
-typedef struct {
+typedef struct LabAudio {
     LabAudioIo io;
     int16_t *buffer;
     int16_t *banks[LAB_AUDIO_BANKS];
@@ -29,6 +29,9 @@ typedef struct {
     int result,outcome;
     int16_t output[256];
     bool ready,driver_owned,replaying;
+    /* Optional trusted extension. Never configured by guest/transfer input. */
+    void *voice_context;
+    int (*voice_call)(void *,struct LabAudio *,uint32_t owner,uint32_t op,uint32_t value,uint32_t now);
 } LabAudio;
 /* Fresh zeroed object, single OS actor, exclusive buffer, 1..32000 PCM16 frames.
  * No heap, file/network writes or implicit recording. init does no device I/O.
@@ -62,5 +65,11 @@ bool lab_audio_recording_metrics(const LabAudio *,uint32_t owner,LabAudioRecordi
 /* Optional host diagnosis: first/second half amplitudes at 1320/1760Hz.
  * Same idle/lease gate, fixed four bins only, no PCM export. */
 bool lab_audio_recording_bands(const LabAudio *,uint32_t owner,uint32_t out[4]);
+/* Trusted Flash PCM8 clip, <=16000 samples at 8kHz. Speaker lease only,
+ * reuses/scrubs existing PCM, nearest-neighbor 16kHz, ceiling/fades preserved.
+ * No guest pointer/path or I/O until an explicit request. */
+bool lab_audio_play_pcm8(LabAudio *,uint32_t owner,const int8_t *,uint32_t samples,uint32_t now);
+/* Consume and scrub an idle same-owner recording; no I/O. */
+bool lab_audio_forget_recording(LabAudio *,uint32_t owner);
 int lab_audio_poll(LabAudio *,uint32_t now);
 #endif

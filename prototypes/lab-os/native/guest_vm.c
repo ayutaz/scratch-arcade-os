@@ -21,8 +21,8 @@ static void rect(wasm_exec_env_t env, int32_t x, int32_t y, int32_t w,
 static int32_t audio_call(wasm_exec_env_t env,uint32_t op,int32_t a,int32_t b) {
     wasm_module_inst_t instance=wasm_runtime_get_module_inst(env);
     LabVm *vm=wasm_runtime_get_custom_data(instance);
-    uint32_t required=op==LAB_VM_AUDIO_TONE || op==LAB_VM_AUDIO_PLAY || op==LAB_VM_AUDIO_SET_GAIN ? LAB_VM_CAP_SPEAKER :
-        op==LAB_VM_AUDIO_RECORD || op==LAB_VM_AUDIO_LEVEL ? LAB_VM_CAP_MICROPHONE : 6;
+    uint32_t required=op==LAB_VM_AUDIO_TONE || op==LAB_VM_AUDIO_PLAY || op==LAB_VM_AUDIO_SET_GAIN || op==LAB_VM_AUDIO_REPLY ? LAB_VM_CAP_SPEAKER :
+        op==LAB_VM_AUDIO_RECORD || op==LAB_VM_AUDIO_LEVEL || op==LAB_VM_AUDIO_CLASSIFY ? LAB_VM_CAP_MICROPHONE : 6;
     if(!vm || !(vm->capabilities&required)) {
         wasm_runtime_set_exception(instance,"audio permission");return -1;
     }
@@ -32,10 +32,11 @@ static int32_t audio_call(wasm_exec_env_t env,uint32_t op,int32_t a,int32_t b) {
     }
     if((op==LAB_VM_AUDIO_TONE && (a<200 || a>4000 || b<20 || b>1000)) ||
        (op==LAB_VM_AUDIO_RECORD && (a<1 || a>2000)) ||
-       (op==LAB_VM_AUDIO_SET_GAIN && (a<0 || a>8)))return -1;
+       (op==LAB_VM_AUDIO_SET_GAIN && (a<0 || a>8)) ||
+       (op==LAB_VM_AUDIO_REPLY && (a<0 || a>4)))return -1;
     if(!vm->audio.call)return -1;
     int value=vm->audio.call(vm->audio.context,op,(uint32_t)a,(uint32_t)b);
-    int maximum=op==LAB_VM_AUDIO_STATE ? 4 : op==LAB_VM_AUDIO_LEVEL ? 32768 : op==LAB_VM_AUDIO_POSITION ? 32000 : 1;
+    int maximum=op==LAB_VM_AUDIO_CLASSIFY ? 6 : op==LAB_VM_AUDIO_STATE ? 4 : op==LAB_VM_AUDIO_LEVEL ? 32768 : op==LAB_VM_AUDIO_POSITION ? 32000 : 1;
     if(value< -1 || value>maximum) {
         wasm_runtime_set_exception(instance,"audio service contract");return -1;
     }
@@ -48,6 +49,8 @@ static int32_t audio_state(wasm_exec_env_t e) {return audio_call(e,LAB_VM_AUDIO_
 static int32_t audio_level(wasm_exec_env_t e) {return audio_call(e,LAB_VM_AUDIO_LEVEL,0,0);}
 static int32_t audio_stop(wasm_exec_env_t e) {return audio_call(e,LAB_VM_AUDIO_STOP,0,0);}
 static int32_t audio_position(wasm_exec_env_t e) {return audio_call(e,LAB_VM_AUDIO_POSITION,0,0);}
+static int32_t audio_classify(wasm_exec_env_t e) {return audio_call(e,LAB_VM_AUDIO_CLASSIFY,0,0);}
+static int32_t audio_reply(wasm_exec_env_t e,int32_t id) {return audio_call(e,LAB_VM_AUDIO_REPLY,id,0);}
 static int32_t audio_set_gain(wasm_exec_env_t e,int32_t gain) {return audio_call(e,LAB_VM_AUDIO_SET_GAIN,gain,0);}
 
 static void wipe(void *ptr,uint32_t n) {volatile uint8_t *p=ptr;while(n--)*p++=0;}
@@ -124,6 +127,7 @@ bool lab_runtime_init(void *pool, uint32_t bytes) {
         {"audio_stop",audio_stop,"()i",NULL},
         {"audio_position",audio_position,"()i",NULL},
         {"audio_set_gain",audio_set_gain,"(i)i",NULL},
+        {"audio_classify",audio_classify,"()i",NULL},{"audio_reply",audio_reply,"(i)i",NULL},
         {"network_send",network_send,"(ii)i",NULL},{"network_receive",network_receive,"(ii)i",NULL},
         {"network_state",network_state,"()i",NULL},
         {"state_read",state_read,"(ii)i",NULL},{"state_write",state_write,"(ii)i",NULL},

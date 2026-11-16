@@ -169,6 +169,22 @@ bool lab_audio_play_recording(LabAudio *s,uint32_t owner,uint32_t now) {
     s->replay_mean=metrics.mean;s->replay_scale_q15=desired<ceiling ? desired:ceiling;
     s->replaying=true;return begin(s,s->recorded,LAB_AUDIO_PLAYING,(s->recorded+15)/16,now);
 }
+bool lab_audio_forget_recording(LabAudio *s,uint32_t owner) {
+    if(!allowed(s,owner,LAB_AUDIO_CAN_RECORD))return false;
+    scrub(s);return true;
+}
+bool lab_audio_play_pcm8(LabAudio *s,uint32_t owner,const int8_t *clip,uint32_t samples,uint32_t now) {
+    if(!allowed(s,owner,LAB_AUDIO_CAN_PLAY) || !clip || samples<80 || samples>16000 || samples*2>s->capacity)return false;
+    scrub(s);uint32_t frames=samples*2;
+    for(uint32_t i=0;i<frames;i++) {
+        int32_t value=(int32_t)clip[i/2]*28;
+        if(value>3277)value=3277;
+        if(value< -3277)value=-3277;
+        uint32_t fade=i<frames-1-i ? i:frames-1-i;if(fade>80)fade=80;
+        uint32_t n;*span(s,i,&n)=(int16_t)(value*(int32_t)fade/80);
+    }
+    s->replaying=false;return begin(s,frames,LAB_AUDIO_PLAYING,(frames+15)/16,now);
+}
 int lab_audio_poll(LabAudio *s,uint32_t now) {
     if(!s || !s->ready)return -1;
     if(s->phase==LAB_AUDIO_IDLE)return s->result;

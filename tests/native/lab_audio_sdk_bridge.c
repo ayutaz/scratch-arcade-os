@@ -2,7 +2,7 @@
 #include "audio_binding.h"
 #include <stdlib.h>
 #include <string.h>
-typedef struct {LabVm vm;LabAudio audio;LabAudioBinding binding;int16_t pcm[32000];unsigned opens,closes,gain_calls;int fail_close,gain_override;} Probe;
+typedef struct {LabVm vm;LabAudio audio;LabAudioBinding binding;int16_t pcm[32000];unsigned opens,closes,gain_calls;int fail_close,gain_override,voice_enabled,voice_result;unsigned voice_calls;} Probe;
 static _Alignas(8) unsigned char pool[196608];
 int test_runtime_start(void){return lab_runtime_init(pool,sizeof(pool));}
 void test_runtime_stop(void){lab_runtime_destroy();}
@@ -18,6 +18,7 @@ void *test_new(void){Probe *p=calloc(1,sizeof(*p));if(!p)return NULL;
 }
 void test_free(void *ctx){Probe *p=ctx;if(!p)return;lab_vm_close(&p->vm,1);p->fail_close=0;lab_audio_binding_close(&p->binding);free(p);}
 static int command(void *ctx,uint32_t op,uint32_t a,uint32_t b){Probe *p=ctx;
+ if((op==9 || op==10) && p->voice_enabled){p->voice_calls++;return p->voice_result;}
  if(op==8){p->gain_calls++;if(p->gain_override)return p->gain_override;}
  return lab_audio_binding_call(&p->binding,op,a,b);
 }
@@ -40,3 +41,6 @@ int test_rebind(void *ctx){Probe *p=ctx;return lab_audio_binding_close(&p->bindi
 unsigned test_gain_calls(void *ctx){return ((Probe *)ctx)->gain_calls;}
 unsigned test_gain_value(void *ctx){return ((Probe *)ctx)->audio.replay_gain;}
 void test_gain_override(void *ctx,int value){((Probe *)ctx)->gain_override=value;}
+
+void test_voice_result(void *ctx,int value){Probe *p=ctx;p->voice_enabled=1;p->voice_result=value;}
+unsigned test_voice_calls(void *ctx){return ((Probe*)ctx)->voice_calls;}
