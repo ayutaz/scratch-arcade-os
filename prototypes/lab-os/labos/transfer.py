@@ -422,9 +422,16 @@ def _telemetry_row(payload, expected):
 @contextmanager
 def serial_connection(port):
     import serial
+    import sys
+    from serial.tools import list_ports
+    # macOS applies DTR and RTS separately when opening a native USB port.
+    # Keep both asserted to avoid the intermediate USB-JTAG reset sequence.
+    native_macos = sys.platform == 'darwin' and any(
+        item.device == port and (item.vid, item.pid) == (0x303a, 0x1001)
+        for item in list_ports.comports())
     stream = serial.Serial(port=None, baudrate=115200, timeout=.05, write_timeout=.5, exclusive=True)
     try:
-        stream.dtr = stream.rts = False
+        stream.dtr = stream.rts = native_macos
         stream.port = port
         stream.open()
         yield stream
