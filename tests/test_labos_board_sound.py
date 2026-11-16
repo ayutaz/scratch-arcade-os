@@ -25,6 +25,17 @@ class BoardSoundTests(unittest.TestCase):
     def init(self):self.assertTrue(self.lib.test_sound_init(self.rig,1))
     def metric(self,n):return self.lib.test_sound_metric(self.rig,n)
     def mem(self,n):return self.lib.test_audio_memory(n)
+    def test_voice_extension_can_only_be_bound_while_closed_and_survives_app_cleanup(self):
+        self.lib.test_sound_voice.argtypes=[C.c_void_p]
+        self.assertFalse(self.lib.test_sound_voice(self.rig));self.init()
+        self.assertTrue(self.lib.test_sound_voice(self.rig))
+        self.assertTrue(self.lib.test_sound_open(self.rig,7))
+        self.assertFalse(self.lib.test_sound_voice(self.rig))
+        self.assertEqual(self.lib.test_sound_command(self.rig,9,0,0),6)
+        self.assertTrue(self.lib.test_sound_close(self.rig))
+        self.assertTrue(self.lib.test_sound_open(self.rig,7))
+        self.assertEqual(self.lib.test_sound_command(self.rig,9,0,0),6)
+
     def test_configuration_is_lazy_and_unknown_profile_or_caps_never_allocates_or_opens_i2s(self):
         for profile in (0,2):self.assertFalse(self.lib.test_sound_init(self.rig,profile))
         self.init()

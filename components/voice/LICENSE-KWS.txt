@@ -1,0 +1,23 @@
+The trained KWS weights and derived conformance features in this directory
+are distributed under Creative Commons Attribution 3.0 Unported (CC BY 3.0).
+https://creativecommons.org/licenses/by/3.0/
+https://creativecommons.org/licenses/by/3.0/legalcode
+
+Attribution:
+HTS Voice "Mei", MMDAgent Project Team.
+Copyright (c) 2009-2018 Nagoya Institute of Technology,
+Department of Computer Science.
+
+HTS Voice / Nitech Japanese Speech Database "NIT ATR503 M001", HTS Working Group.
+Copyright (c) 2003-2012 Nagoya Institute of Technology,
+Department of Computer Science.
+Copyright (c) 2003-2008 Tokyo Institute of Technology,
+Interdisciplinary Graduate School of Science and Engineering.
+
+Modifications: synthetic speech generation, augmentation, feature extraction,
+classifier training, power-of-two integer quantization and C conversion by
+Arcade AI Pet contributors, 2026. No endorsement is implied.
+
+The hand-written code and generated mathematical feature_tables.h remain
+Apache-2.0; this notice does not relicense those files or upstream TTS software.
+No upstream TTS weights or device recordings are included.

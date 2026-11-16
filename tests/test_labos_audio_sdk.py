@@ -29,6 +29,8 @@ IMPORTS={
  'level':'(import "os" "audio_level" (func $f (result i32)))',
  'stop':'(import "os" "audio_stop" (func $f (result i32)))',
  'position':'(import "os" "audio_position" (func $f (result i32)))',
+ 'classify':'(import "os" "audio_classify" (func $f (result i32)))',
+ 'reply':'(import "os" "audio_reply" (func $f (param i32) (result i32)))',
  'gain':'(import "os" "audio_set_gain" (func $f (param i32) (result i32)))',
 }
 class AudioSdkTests(unittest.TestCase):
@@ -70,6 +72,25 @@ class AudioSdkTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):session.frame(0,16)
         else:session.frame(0,16);self.assertEqual(session.debug('debug_value'),expected)
         session.close()
+    def test_voice_classify_permission_bounds_and_mutation_budget_match_both_vms(self):
+        self.lib.test_voice_result.argtypes=[C.c_void_p,C.c_int]
+        self.lib.test_voice_result(self.probe,6)
+        self.check_both('classify','call $f',4,6)
+        self.check_both('classify','call $f',2,None,trap=True)
+        self.lib.test_voice_result(self.probe,7)
+        self.check_both('classify','call $f',4,None,trap=True)
+        self.lib.test_voice_result(self.probe,6)
+        self.check_both('classify','call $f drop call $f drop call $f',4,None,trap=True)
+    def test_reply_id_and_speaker_permission_are_checked_before_backend(self):
+        self.lib.test_voice_result.argtypes=[C.c_void_p,C.c_int]
+        self.lib.test_voice_calls.argtypes=[C.c_void_p]
+        self.lib.test_voice_result(self.probe,1)
+        self.check_both('reply','i32.const 5 call $f',2,-1)
+        self.assertEqual(self.lib.test_voice_calls(self.probe),0)
+        self.check_both('reply','i32.const 0 call $f',4,None,trap=True)
+        self.check_both('reply','i32.const 0 call $f',2,1)
+        self.check_both('reply','i32.const 0 call $f',2,-1,backend=False)
+
     def test_missing_permission_traps_before_any_backend_io_in_both_vms(self):
         self.check_both('tone','i32.const 1000 i32.const 20 call $f',1,None,trap=True)
         self.assertEqual(self.lib.test_opens(self.probe),0)

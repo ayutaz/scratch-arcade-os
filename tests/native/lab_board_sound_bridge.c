@@ -10,3 +10,8 @@ void test_sound_poll(Rig *r,unsigned now){if(r->hooks.poll)r->hooks.poll(r->hook
 int test_sound_close(Rig *r){return lab_board_sound_close(&r->sound);}
 unsigned test_sound_metric(Rig *r,unsigned i){return i==0 ? r->sound.frames : i==1 ? r->sound.audio.owner : i==2 ? r->sound.driver.channel!=NULL : r->sound.audio.recorded;}
 void test_sound_free(Rig *r){test_audio_fault(0);test_audio_memory_fault(0,0);lab_board_sound_close(&r->sound);free(r);}
+
+static int fake_voice(void *context,LabAudio *audio,uint32_t owner,uint32_t op,uint32_t value,uint32_t now) {
+ (void)op;(void)value;(void)now;return context==audio->voice_context && audio->owner==owner ? 6:-1;
+}
+int test_sound_voice(Rig *r){return lab_board_sound_set_voice(&r->sound,r,fake_voice);}

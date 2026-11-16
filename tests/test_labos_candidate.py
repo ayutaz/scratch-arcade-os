@@ -81,12 +81,13 @@ class CandidateTests(unittest.TestCase):
               #include "board_boot.h"
               #include "state_mount.h"
               #include "resource_monitor.h"
+              #include "voice_service.h"
               #include <stdio.h>
               #include <string.h>
               #include "pthread.h"
               #include "esp_pthread.h"
               #include <stdlib.h>
-              static unsigned mode,steps,closes,delays,bad,binds,states;static uint32_t now=100;
+              static unsigned mode,steps,closes,delays,bad,binds,states,voices;static uint32_t now=100;
               static char trace[160];static unsigned used,on_thread,created,joined;static void *(*entry)(void *);
               esp_pthread_cfg_t esp_pthread_get_default_config(void){return (esp_pthread_cfg_t){.stack_size=3072,.prio=5,.pin_to_core=-1};}
               int esp_pthread_set_cfg(const esp_pthread_cfg_t *c){
@@ -119,6 +120,13 @@ class CandidateTests(unittest.TestCase):
                 if(!b || c->profile!=1 || c->layout.address!=0x110000 || c->layout.bytes!=0x100000 || c->quota!=0xe0000 || t!=100)bad=1;
                 b->runtime_owned=true;b->ready=mode!=1;b->session.usb.active=mode==0 || mode==2 || mode==6;return mode!=1;
               }
+              int lab_voice_call(void *c,LabAudio *a,uint32_t owner,uint32_t op,uint32_t value,uint32_t time){
+                (void)c;(void)a;(void)owner;(void)op;(void)value;(void)time;return -1;
+              }
+              bool lab_board_sound_set_voice(LabBoardSound *s,void *context,int (*call)(void *,LabAudio *,uint32_t,uint32_t,uint32_t,uint32_t)){
+                if(!on_thread || !s || !context || call!=lab_voice_call || steps || closes || binds || states)bad=1;
+                voices++;return mode!=7;
+              }
               bool lab_state_mount_attach(LabStateMount *s,LabHome *h,lfs_t *fs,bool create){
                 if(!on_thread || !s || !h || !fs || !create || steps || closes)bad=1;
                 states++;return mode!=6;
@@ -136,7 +144,7 @@ class CandidateTests(unittest.TestCase):
               int main(int argc,char **argv){mode=argc>1 ? atoi(argv[1]) : 0;app_main();
                 if(mode!=4 && mode!=5 && (created!=1 || joined!=1))bad=1;
                 if((mode==4 || mode==5) && (steps || closes || created || joined))bad=1;
-                printf("steps=%u closes=%u delays=%u bad=%u binds=%u states=%u trace=%s\\n",steps,closes,delays,bad,binds,states,trace);return bad;}
+                printf("steps=%u closes=%u delays=%u bad=%u binds=%u states=%u voices=%u trace=%s\\n",steps,closes,delays,bad,binds,states,voices,trace);return bad;}
             ''')
             flags = ['-I' + str(ROOT / 'tests/native' / name) for name in
                      ('wifi_fixture','boot_fixture', 'session_fixture', 'display_fixture', 'input_fixture', 'usb_fixture', 'flash_fixture','audio_fixture')]
@@ -153,10 +161,11 @@ class CandidateTests(unittest.TestCase):
                                    (3, 'steps=3 closes=2 delays=3 bad=0 binds=0 trace=1:0,2:3,2:7,2:27,4:25,5:25,5:1,6:0,'),
                                    (4, 'steps=0 closes=0 delays=0 bad=0 binds=0 trace=3:0,'),
                                    (5, 'steps=0 closes=0 delays=0 bad=0 binds=0 trace=3:0,'),
-                                   (6, 'steps=0 closes=2 delays=1 bad=0 binds=1 trace=1:0,3:3,5:3,5:1,6:0,')):
+                                   (6, 'steps=0 closes=2 delays=1 bad=0 binds=1 trace=1:0,3:3,5:3,5:1,6:0,'),
+                                   (7, 'steps=0 closes=2 delays=1 bad=0 binds=0 trace=1:0,3:3,5:3,5:1,6:0,')):
                 p = subprocess.run([str(exe), str(mode)], capture_output=True, text=True, timeout=5)
                 self.assertEqual(p.returncode, 0, p.stderr)
-                expected=expected.replace(' trace=',f' states={1 if mode in (0,3,6) else 0} trace=')
+                expected=expected.replace(' trace=',f' states={1 if mode in (0,3,6) else 0} voices={0 if mode in (1,4,5) else 1} trace=')
                 self.assertEqual(p.stdout.strip(), expected)
 
 

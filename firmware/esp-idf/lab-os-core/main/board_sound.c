@@ -6,6 +6,10 @@ bool lab_board_sound_init(LabBoardSound *s,int profile) {
        (s->configured && s->profile!=profile))return false;
     s->profile=profile;s->configured=true;return true;
 }
+bool lab_board_sound_set_voice(LabBoardSound *s,void *context,int (*call)(void *,LabAudio *,uint32_t,uint32_t,uint32_t,uint32_t)) {
+    if(!s || !s->configured || !context || !call || s->pcm.frames || s->driver.channel || s->manager.binding.audio)return false;
+    s->voice_context=context;s->voice_call=call;return true;
+}
 bool lab_board_sound_close(LabBoardSound *s) {
     if(!s)return false;
     if(!lab_audio_binding_close(&s->manager.binding))return false;
@@ -25,6 +29,7 @@ static bool acquire(void *context,uint32_t caps,LabVmAudio *out) {
     s->frames=frames;
     LabAudioIo io=lab_board_audio_services(&s->driver);
     if(!lab_audio_init_banked(&s->audio,&io,&s->pcm) || !lab_audio_manager_init(&s->manager,&s->audio))return false;
+    s->audio.voice_context=s->voice_context;s->audio.voice_call=s->voice_call;
     s->manager.now=s->now;s->manager.next_owner=s->epoch;
     LabHomeAudio hooks=lab_audio_manager_services(&s->manager);
     bool ok=hooks.open(hooks.context,caps,out);s->epoch=s->manager.next_owner;

@@ -46,6 +46,18 @@ int32_t audio_position(void);
  * audio_stop reset gain to 1. Requires firmware newer than 778e. */
 __attribute__((import_module("os"),import_name("audio_set_gain")))
 int32_t audio_set_gain(int32_t gain);
+/* Optional fixed Japanese command service. Requires newer voice firmware;
+ * older ABI2 firmware rejects these imports. Each is a mutation, sharing the
+ * <=2/frame audio budget. classify requires microphone and consumes one idle,
+ * completed 2000ms recording: -1 unavailable, 0 play, 1 come, 2 wait, 3 sleep,
+ * 4 thanks, 5 unknown, 6 silence. PCM is erased before return, never exported.
+ * Fixed native work is bounded, but S3 latency still requires device testing.
+ * reply requires speaker: id0..4, -1 invalid/unavailable, 0 busy, 1 accepted.
+ * Replies are pre-synthesized clips, not free-form on-device TTS. */
+__attribute__((import_module("os"),import_name("audio_classify")))
+int32_t audio_classify(void);
+__attribute__((import_module("os"),import_name("audio_reply")))
+int32_t audio_reply(int32_t id);
 /* Optional network capability and OS-provided UDP lease. Caller memory must
  * be exported as "memory". Route/SSID/password are never guest arguments.
  * 1..64 bytes, <=2 send/receive operations and <=8 state queries per frame.

@@ -5,7 +5,7 @@
 #include "wasm_export.h"
 
 enum {LAB_VM_CAP_DRAW=1,LAB_VM_CAP_SPEAKER=2,LAB_VM_CAP_MICROPHONE=4,LAB_VM_CAP_NETWORK=8,LAB_VM_CAP_STORAGE=16,LAB_VM_CAP_ALL=31};
-enum {LAB_VM_AUDIO_TONE=1,LAB_VM_AUDIO_RECORD,LAB_VM_AUDIO_PLAY,LAB_VM_AUDIO_STATE,LAB_VM_AUDIO_LEVEL,LAB_VM_AUDIO_STOP,LAB_VM_AUDIO_POSITION,LAB_VM_AUDIO_SET_GAIN};
+enum {LAB_VM_AUDIO_TONE=1,LAB_VM_AUDIO_RECORD,LAB_VM_AUDIO_PLAY,LAB_VM_AUDIO_STATE,LAB_VM_AUDIO_LEVEL,LAB_VM_AUDIO_STOP,LAB_VM_AUDIO_POSITION,LAB_VM_AUDIO_SET_GAIN,LAB_VM_AUDIO_CLASSIFY,LAB_VM_AUDIO_REPLY};
 /* Borrowed trusted binding, not guest memory. Caller closes VM before releasing
  * this lease; failed external cleanup must retain it and block the next app. */
 typedef struct {void *context;int (*call)(void *,uint32_t op,uint32_t a,uint32_t b);} LabVmAudio;

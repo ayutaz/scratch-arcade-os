@@ -5,3 +5,7 @@ Original project code is licensed under Apache-2.0.
 Third-party code, fonts, and generated font data retain their own notices.
 See THIRD_PARTY_NOTICES.md and licenses/third-party/.
 This is an independent experimental project, not an official Scratch Arcade release.
+
+The fixed Japanese KWS model and pre-generated reply data in components/voice
+retain CC BY 3.0 attribution. See components/voice/NOTICE.md and its license files.
+The voice-service implementation is Apache-2.0. No device recording is included.
