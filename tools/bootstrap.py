@@ -16,7 +16,7 @@ SOURCES={
  'littlefs':dict(url='https://github.com/littlefs-project/littlefs.git',tag='v2.11.3',commit='6cb4e86540eca0d9ba62500a298385c9d863c8be',path='.cache/os-littlefs-v2.11.3'),
  'idf':dict(url='https://github.com/espressif/esp-idf.git',tag='v6.1',commit='fff9895c82d744c7237be8847347bdd1b07c6643',path='.cache/os-idf-v6.1')}
 ZIG=dict(url='https://ziglang.org/download/0.15.2/zig-aarch64-macos-0.15.2.tar.xz',sha256='3cc2bab367e185cdfb27501c4b30b1b0653c28d9f73df8dc91488e66ece5fa6b',bytes=50635984,path='.cache/os-sdk-toolchain/zig-aarch64-macos-0.15.2')
-CONSTRAINTS=dict(url='https://dl.espressif.com/dl/esp-idf/espidf.constraints.v6.1.txt',sha256='192e8c82a7890164a4e8fe6fafe8423a47f6042c84b5f6a500a003640ae4d32b')
+CONSTRAINTS=dict(url='https://dl.espressif.com/dl/esp-idf/espidf.constraints.v6.1.txt',source='firmware/esp-idf/host-tools/constraints-v6.1.txt',sha256='192e8c82a7890164a4e8fe6fafe8423a47f6042c84b5f6a500a003640ae4d32b')
 FONT=dict(url='https://raw.githubusercontent.com/google/fonts/29b4ec6df2522a8aee279414b78a07910b065874/ofl/notosansjp/NotoSansJP%5Bwght%5D.ttf',sha256='c2f3b4d463500a2ddcd3849cded1fceeb9fd6d1c32e6cbecd568453ba50fc68f')
 
 def safe_members(members,prefix):
@@ -70,11 +70,15 @@ def ensure_zig(root=ROOT):
  return p
 
 def ensure_constraints(root=ROOT):
+ source=checked_path(root,CONSTRAINTS['source'])
+ if not source.is_file() or source.stat().st_size>65536:raise ValueError('bounded original constraints required')
+ with source.open('rb') as stream:data=stream.read(65537)
+ if len(data)>65536 or hashlib.sha256(data).hexdigest()!=CONSTRAINTS['sha256']:raise ValueError('original IDF constraints checksum')
  path=checked_path(root,'.cache/os-idf-tools/espidf.constraints.v6.1.txt')
  if path.exists():
   if hashlib.sha256(path.read_bytes()).hexdigest()!=CONSTRAINTS['sha256']:raise ValueError('IDF constraints checksum')
  else:
-  path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(download(CONSTRAINTS['url'],CONSTRAINTS['sha256']))
+  path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(data)
  return path
 
 def ensure_font(root=ROOT):
