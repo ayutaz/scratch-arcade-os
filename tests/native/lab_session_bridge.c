@@ -81,3 +81,13 @@ unsigned test_session_network_metric(LabBoardSession *s,unsigned which){switch(w
  default:return LAB_NOTICE_NETWORK;}}
 static bool udp_close_fault(void *ctx){return !udp_cleanup_failure && lab_board_udp_close(ctx);}
 void test_session_udp_fault(LabBoardSession *s,int fail){udp_cleanup_failure=fail;s->network.udp.io.close=udp_close_fault;}
+
+/* Protocol fixture only: deterministic provider scalars, no recorded PCM. */
+static int fixture_voice_snapshot(void *context,LabAudio *audio,uint32_t owner,uint32_t op,uint32_t field,uint32_t now){
+ (void)now;
+ if(context!=audio->voice_context || audio->owner!=owner || op!=LAB_AUDIO_VOICE_SNAPSHOT || field>17)return -1;
+ if(!field)return 1;
+ const uint32_t values[]={7,6,0,32000,1600,1600,1600,1600,0,0,0,1600,1600,1,3,1234};
+ return field==17 ? (int32_t)audio->lease_generation:(int32_t)values[field-1];
+}
+int test_session_voice_fixture(LabBoardSession *s){return lab_board_sound_set_voice(&s->sound,s,fixture_voice_snapshot);}

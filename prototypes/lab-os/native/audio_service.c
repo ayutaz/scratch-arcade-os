@@ -50,6 +50,7 @@ bool lab_audio_claim(LabAudio *s,uint32_t owner,uint32_t permissions) {
     if(!s || !s->ready || s->owner || s->driver_owned || s->phase!=LAB_AUDIO_IDLE ||
        !owner || !permissions || permissions>3)return false;
     scrub(s);s->owner=owner;s->permissions=permissions;s->result=0;
+    if(!++s->lease_generation)++s->lease_generation;
     /* A fresh lease must not expose the previous app's operation metadata. */
     s->position=s->total=s->kind=0;s->replaying=false;s->replay_gain=1;return true;
 }

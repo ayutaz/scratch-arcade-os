@@ -43,6 +43,16 @@ static int control(void *context,const uint8_t *p,uint32_t n,uint32_t now,uint8_
         }
         return 1;
     }
+    if(lab_control_u32(p)==LAB_CONTROL_VOICE){
+        LabAudio *a=&s->sound.audio;memset(out,0,80);put32(out,1);
+        if(s->home.mode==LAB_RUNNING && a->ready && a->owner && (a->permissions&LAB_AUDIO_CAN_RECORD) &&
+           a->voice_call && a->voice_call(a->voice_context,a,a->owner,LAB_AUDIO_VOICE_SNAPSHOT,0,now)==1){
+            put32(out+4,1);
+            for(unsigned field=1;field<=17;field++)
+                put32(out+4*(field+1),(uint32_t)a->voice_call(a->voice_context,a,a->owner,LAB_AUDIO_VOICE_SNAPSHOT,field,now));
+        }
+        return 1;
+    }
     if(lab_control_u32(p)==LAB_CONTROL_PULSE){
         if(!s->physical_seen || !s->physical_neutral || !s->usb.active || !s->usb.transfer.session ||
            lab_transfer_busy(&s->usb.transfer))return 0;

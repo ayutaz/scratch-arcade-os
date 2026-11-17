@@ -5,8 +5,9 @@
 
 | 対象 | 条件 |
 |---|---|
-| kws_features.c / kws_inference.c / pet_kws.h / feature_tables.h | Apache-2.0 |
-| pet_model.h | 合成音声から学習した17,380B KWS重み、CC BY 3.0、[帰属](LICENSE-KWS.txt) |
+| channel_features.c / channel_prepare.c / channel_features.h / kws_inference.c / pet_kws.h / feature_tables.h | Apache-2.0 |
+| kws_features.c | 旧v2の参照source。現行targetでは未使用、Apache-2.0 |
+| pet_model.h | 合成音声から学習した23,884B KWS v3重み、CC BY 3.0、[帰属](LICENSE-KWS.txt) |
 | replies.h | M001の事前生成音声25,418B、CC BY 3.0、[帰属](LICENSE-REPLIES.txt) |
 
 KWSはHTS Voice Mei（MMDAgent Project Team）とNIT ATR503 M001（HTS Working Group）由来。
@@ -15,7 +16,7 @@ KWSはHTS Voice Mei（MMDAgent Project Team）とNIT ATR503 M001（HTS Working G
 返答はM001だけを合成し、DC除去・低域通過・8kHz化・PCM8化・fadeを適用した。
 機関/著作者の推薦を示すものではない。
 
-[上流モデルカード](https://github.com/ayutaz/arcade-ai-pet/blob/975ef913f91c417cd715c23eae8099c140d965db/models/kws-v2/model-card.md)、
+[上流モデルカード](https://github.com/ayutaz/arcade-ai-pet/blob/595f5d7d9cf06c08165e160d9d46040f326ef0ad/models/kws-v3/model-card.md)、
 [返答の詳細](https://github.com/ayutaz/arcade-ai-pet/blob/975ef913f91c417cd715c23eae8099c140d965db/assets/replies-v1/model-card.md)。
 C表の内部コメントにある相対pathは上流repoでの配置を示す。このOSでの条件は本NOTICEと同梱licenseを参照。
 
