@@ -11,7 +11,7 @@ class VoiceServiceTests(unittest.TestCase):
         cls.temp=tempfile.TemporaryDirectory();cls.addClassCleanup(cls.temp.cleanup)
         out=Path(cls.temp.name)/'voice.so';native=ROOT/'prototypes/lab-os/native';model=ROOT/'components/voice'
         sources=[native/'audio_service.c',native/'audio_binding.c',native/'voice_service.c',
-                 model/'kws_features.c',model/'kws_inference.c',ROOT/'tests/native/lab_voice_bridge.c']
+                 model/'channel_features.c',model/'channel_prepare.c',model/'kws_inference.c',ROOT/'tests/native/lab_voice_bridge.c']
         run=subprocess.run(['clang','-O2','-std=c11','-Wall','-Wextra','-Werror','-shared','-fPIC',
                             '-I'+str(native),'-I'+str(model),'-I'+str(ROOT/'downloads/os-research/wamr-upstream/core/iwasm/include'),
                             *map(str,sources),'-lm','-o',str(out)],capture_output=True,text=True)
@@ -60,3 +60,61 @@ class VoiceServiceTests(unittest.TestCase):
                     self.assertEqual(self.lib.voice_call(rig,9,0),6)
                     self.assertEqual(self.lib.voice_value(rig,1),0)
                     self.assertTrue(self.lib.voice_clean(rig))
+
+    def test_completed_pcm_injection_is_bounded_and_consumed(self):
+        from array import array
+        fn=self.lib.voice_fill_pcm;fn.argtypes=[C.c_void_p,C.c_void_p,C.c_uint,C.c_int]
+        pcm=array('h',[1200]*32000);pointer=(C.c_int16*32000).from_buffer(pcm)
+        for contiguous in (0,1):
+            rig=self.rig();self.assertEqual(fn(rig,pointer,32000,contiguous),0)
+            self.assertEqual(self.lib.voice_call(rig,2,2000),1)
+            for i in range(125):self.lib.voice_poll(rig,i*16)
+            self.assertEqual(fn(rig,pointer,31999,contiguous),0)
+            self.assertEqual(fn(rig,None,32000,contiguous),0)
+            self.assertEqual(fn(rig,pointer,32000,2),0)
+            self.assertEqual(fn(rig,pointer,32000,contiguous),1)
+            self.assertEqual(self.lib.voice_call(rig,9,0),6)
+            self.assertTrue(self.lib.voice_clean(rig))
+
+    def test_time_varying_microphone_offset_is_silence_in_both_memory_layouts(self):
+        from array import array
+        import math
+        pcm=array('h',[round(1600+480*math.exp(-i/4800)) for i in range(32000)])
+        pointer=(C.c_int16*32000).from_buffer(pcm)
+        self.lib.voice_fill_pcm.argtypes=[C.c_void_p,C.c_void_p,C.c_uint,C.c_int]
+        for contiguous in (0,1):
+            with self.subTest(contiguous=contiguous):
+                rig=self.rig();self.assertEqual(self.lib.voice_call(rig,2,2000),1)
+                for i in range(125):self.lib.voice_poll(rig,i*16)
+                self.assertEqual(self.lib.voice_fill_pcm(rig,pointer,32000,contiguous),1)
+                self.assertEqual(self.lib.voice_call(rig,9,0),6)
+                self.assertEqual(self.lib.voice_value(rig,1),0);self.assertTrue(self.lib.voice_clean(rig))
+
+    def test_private_snapshot_retains_only_metrics_and_isolated_current_lease(self):
+        get=self.lib.voice_native_status;get.argtypes=[C.c_void_p,C.c_uint,C.c_uint]
+        rig=self.rig();self.assertEqual(get(rig,1,0),0)
+        self.assertEqual(self.lib.voice_call(rig,65536,0),-1)  # Not a guest API.
+        self.assertEqual(self.lib.voice_call(rig,2,2000),1)
+        for i in range(125):self.lib.voice_poll(rig,i*16)
+        self.assertEqual(self.lib.voice_fill_offset(rig,1600,0),1)
+        self.assertEqual(self.lib.voice_call(rig,9,0),6)
+        self.assertEqual(get(rig,1,0),1);self.assertEqual(get(rig,1,1),1)
+        self.assertEqual(get(rig,1,2),6);self.assertEqual(get(rig,1,3),0)
+        self.assertEqual(get(rig,1,4),32000)
+        for index in (5,6,7,8,12,13):self.assertEqual(get(rig,1,index),1600)
+        for index in (9,10,11):self.assertEqual(get(rig,1,index),0)
+        self.assertEqual(get(rig,1,14),1);self.assertEqual(get(rig,1,15),3)
+        self.assertEqual(get(rig,1,17),1);self.assertEqual(get(rig,2,0),-1)
+        self.assertEqual(get(rig,1,18),-1)
+        self.assertTrue(self.lib.voice_clean(rig));self.assertEqual(self.lib.voice_value(rig,1),0)
+        self.assertEqual(self.lib.voice_call(rig,6,0),1)
+        self.assertEqual(get(rig,1,0),0);self.assertEqual(get(rig,1,1),-1)
+        self.assertEqual(self.lib.voice_call(rig,2,2000),1)
+        for i in range(125):self.lib.voice_poll(rig,2000+i*16)
+        self.assertEqual(self.lib.voice_call(rig,9,0),6)
+        self.assertEqual(get(rig,1,1),1);self.assertEqual(get(rig,1,17),2)
+        self.assertEqual(self.lib.voice_call(rig,9,0),-1)
+        self.assertEqual(get(rig,1,1),2);self.assertEqual(get(rig,1,2),-1)
+        self.assertEqual(get(rig,1,3),1);self.assertEqual(get(rig,1,4),0)
+        self.assertEqual(get(rig,1,14),0);self.assertTrue(self.lib.voice_clean(rig))
+        speaker=self.rig(3);self.assertEqual(get(speaker,1,0),-1)

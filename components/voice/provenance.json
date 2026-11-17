@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/ayutaz/arcade-ai-pet",
-  "commit": "975ef913f91c417cd715c23eae8099c140d965db",
+  "commit": "595f5d7d9cf06c08165e160d9d46040f326ef0ad",
   "files": {
     "pet_kws.h": {
       "source": "native/pet_kws.h",
@@ -15,27 +15,44 @@
       "sha256": "37e2c27afc2711caed44311859686a9072b2d181976850b0780b57a7b884d905"
     },
     "feature_tables.h": {
-      "source": "models/kws-v2/feature_tables.h",
+      "source": "models/kws-v3/feature_tables.h",
       "sha256": "f880061b75d258240508ca9b8ca11d519c708e8643858a83d0128487b6e20edf"
     },
     "pet_model.h": {
-      "source": "models/kws-v2/pet_model.h",
-      "sha256": "946bcf467df0de6473b69461340e02fe85af685f58aeefbbcc2058126b086686"
+      "source": "models/kws-v3/pet_model.h",
+      "sha256": "f04cbe0a5a9c495524b155da9b1e8a6284ce343db8ea5e647d0def73bef33548"
     },
     "replies.h": {
       "source": "assets/replies-v1/replies.h",
       "sha256": "5aba2a8873fbc858f10e4b19c560f2a6aad454f66088ef512955f4be9a22ecdb"
     },
     "LICENSE-KWS.txt": {
-      "source": "models/kws-v2/LICENSE.txt",
+      "source": "models/kws-v3/LICENSE.txt",
       "sha256": "ed1be839daaf85b8be4e890c2a765a239ac44995558972f6a211b8beadb2d55d"
     },
     "LICENSE-REPLIES.txt": {
       "source": "assets/replies-v1/LICENSE.txt",
       "sha256": "3cf896d6518c72efd4dbdbd0cc8f7d9cb9af6404d1e28ec6875b16c92cc1d3ec"
+    },
+    "channel_features.c": {
+      "source": "native/channel_features.c",
+      "sha256": "7d8a93a3e854c9d01f881a17402c57728200710de6bb98d52ecd4d77f4ba491a"
+    },
+    "channel_features.h": {
+      "source": "native/channel_features.h",
+      "sha256": "ae7cb731cdeb5f95d87e520bde4c3b9ef8ac6767e64387841956888010cfdc50"
+    },
+    "channel_prepare.c": {
+      "source": "native/channel_prepare.c",
+      "sha256": "6ca2e011a50484adf2601c882c4ab336e3bea2e9a932d303d8522390cceb373d"
+    },
+    "channel-metadata.json": {
+      "source": "models/kws-v3/channel-metadata.json",
+      "sha256": "8d586eb28ee602f6622911c77ccb488174f0c14995b7ad81b5d435362354593b"
     }
   },
-  "weights_bytes": 17380,
+  "weights_bytes": 23884,
   "reply_bytes": 25418,
-  "device_tested": false
+  "device_tested": false,
+  "runtime": "channel-adaptive-v1"
 }

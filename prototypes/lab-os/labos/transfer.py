@@ -311,6 +311,36 @@ class Client:
         return dict(zip(('version','phase','claimed','driver_owned','capacity','recorded','total',
                          'position','kind','replaying','peak','result'),values))
 
+    def voice_status(self):
+        """現在のmic leaseの分類結果と集計だけを読む。PCM/特徴を取得しない。"""
+        reply=self._request(15,struct.pack('<I',5))
+        names=('version','available','sequence','result','errors','frames','minimum','maximum','mean',
+               'rms','ac_rms','centered_peak','saturated_frames','first_mean_1024','last_mean_1024',
+               'features_ok','model_revision','observed_at_ms','lease_generation')
+        try:
+            if len(reply)!=80 or any(reply[76:]):raise ValueError('length/padding')
+            values=struct.unpack_from('<3Ii2I3i4I2i4I',reply);v=dict(zip(names,values))
+            if v['version']!=1 or v['available']>1:raise ValueError('schema/available')
+            if not v['available']:
+                if any(values[2:]):raise ValueError('stale unavailable voice status')
+            else:
+                if (not v['sequence'] or not v['lease_generation'] or v['model_revision']!=3 or
+                    not -1<=v['result']<=6 or v['features_ok']>1 or v['frames'] not in (0,32000) or
+                    (v['result']>=0 and (not v['features_ok'] or v['frames']!=32000)) or
+                    (v['result']==-1 and not v['errors'])):raise ValueError('voice status fields')
+                if not v['frames']:
+                    if any(values[6:16]):raise ValueError('stale input metrics')
+                elif (not -32768<=v['minimum']<=v['mean']<=v['maximum']<=32767 or
+                      not abs(v['mean'])<=v['rms']<=32768 or v['ac_rms']>v['rms'] or
+                      v['centered_peak']!=max(v['maximum']-v['mean'],v['mean']-v['minimum']) or
+                      v['saturated_frames']>v['frames'] or
+                      not v['minimum']<=v['first_mean_1024']<=v['maximum'] or
+                      not v['minimum']<=v['last_mean_1024']<=v['maximum']):raise ValueError('voice input metrics')
+        except (ValueError,TypeError,struct.error):
+            self.failed=True
+            raise TransferError('invalid voice snapshot') from None
+        return v
+
     def audio_metrics(self):
         """完了した現在の録音の集計だけを読む。PCM・録音履歴は取得しない。"""
         reply=self._request(15,struct.pack('<I',4))

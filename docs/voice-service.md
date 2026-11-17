@@ -115,3 +115,66 @@ GPIO/PSRAM/eFuse/securityは変更せず、raw PCMを取得していない。原
 この結果は配備/保全/起動であり、音声認識の改善や人の声による合格とは別。固定1回許可は使用済みで、再試行・自動復元・別imageは含まない。
 
 最新の操作/音響結果は[Petの実機記録](https://github.com/ayutaz/arcade-ai-pet/blob/main/docs/device-validation.md)を参照。ここへ記載した配備結果だけを認識品質の証拠としない。
+
+## 2026-11-18: v3候補と分類診断
+
+実機c032はKWS v2のまま。以下は新しいsource/ホスト試験の結果で、実機へ適用していない。
+
+- [Pet source595f5d7](https://github.com/ayutaz/arcade-ai-pet/tree/595f5d7d9cf06c08165e160d9d46040f326ef0ad)のv3を固定して取り込んだ。[来歴/ライセンス](../components/voice/NOTICE.md)。
+- 重み23,884B、260→88→7、閾値995。HP160→平均除去→peak4,096→adaptive MFCC。PCMは既存bank/連続buffer内で消費し、scratch5,680Bと出力を消去する。
+- 上流の固定合成8条件×956例は全条件合格、Cとの判定/直接integer logit/分割bufferの特徴は7,648件一致。実声やS3の性能ではない。
+- 返答素材、guest ABI2、GPIO/PSRAM、Flash配置は変更しない。新しいFWの実機適用は個別レビュー/許可が必要。
+
+### scalar診断の契約
+
+`Client.voice_status()`はUSB管理op15 / control5、payload4Bの読み取り専用要求。
+返答は80B、schema1。未分類/HOME/cleanup/mic permissionなしは`available=0`と残りzero。
+現在のmic owner/leaseだけが次の値を読める。PCM・MFCC・logit・任意memoryを返さない。
+
+| 値 | 意味 |
+|---|---|
+| sequence / lease_generation | 現在lease内の分類試行とlease識別子。停止/再取得で前の観測を隠す |
+| result | 0〜4操作、5対象外、6無音、-1明示エラー。画面だけの無反応7とは別 |
+| errors | このlease内のnative分類エラー累計。過去のerrorを後の成功で0に戻さない |
+| frames / minimum / maximum / mean / rms / ac_rms / centered_peak / saturated_frames | 分類直前の全入力集計。完全録音時は32,000frames、未完了等の拒否時は0 |
+| first_mean_1024 / last_mean_1024 | 入力の先頭/末尾1,024samplesの平均。声だけのSNRとは呼ばない |
+| features_ok / model_revision / observed_at_ms | 特徴生成の成否、model3、分類呼出し時のOS loop時刻。推論終了時刻やPCの時刻ではない |
+
+入力集計は分類前、PCM/scratchは分類後に消去。残るのは最後のscalarだけで、失敗した試行もsequence/result/errorsへ反映する。
+このproviderのprivate opcode65,536はguest bindingから拒否する。trusted USBからだけ現在の稼働app/permissionで問い合わせる。
+旧FWではcontrol5が未対応のため、固定版を確認してから使う。parserは余分なpadding/不整合/旧model等を拒否して接続を失敗状態にする。
+
+### 先行テスト
+
+- 時間変動するDCの生成入力: 連続/分割で旧5→期待6の2失敗Red、v3移植後Green。実機の原因証明ではない。
+- scalar診断: unsupported native queryの-1→期待0のRed後に実装。結果/集計、guest拒否、owner/lease分離、明示error、buffer消去を確認。
+- wire: upload中のop5拒否Red→読み取り成功、upload/app数維持。BSPのHOME/稼働appのpacketも先行Redから確認。
+- client: 新method欠落Red→分類/未取得/明示errorと不正packetの拒否を確認。
+- 補助のPCM注入/診断passthroughは最初にhook欠落を確認して作成。mockの初期参照不足や、2回目の録音で試験時計を巻き戻した失敗は製品Redへ数えない。
+
+```sh
+uv run --locked python -m unittest discover -s tests -p test_labos_voice_service.py -v
+uv run --locked python -m unittest discover -s tests -p test_voice_snapshot_client.py -v
+uv run --locked python -m unittest discover -s tests -p test_voice_component_v3.py -v
+uv run --locked python -m unittest discover -s tests -p test_labos_transfer.py -v
+uv run --locked python -m unittest discover -s tests -p test_labos_board_session.py -v
+```
+
+BSP packet試験のproviderは決定的scalarのprotocol fixtureで、実際の録音証拠ではない。
+別の音声service試験は生成PCMと実Cモデルを使う。どちらも実LCD/聴取/物理入力の保証へ広げない。
+生PCMや実機IDはGitへ保存しない。
+
+### 全回帰とターゲットビルド
+
+2026-11-18、`uv run --locked python tools/test.py`は715件/86.339秒、skipなしで成功。
+`PYTHONPATH=prototypes/lab-os uv run --locked python -m labos.target build-candidate`も成功した。
+ESP-IDF v6.1の固定sourceと固定Xtensa toolchainを使用し、書き込みは実行していない。
+
+候補binは974,080B（0xEDD00）、1MiB app slotの残り74,496B。これは未コミットsourceでの予備ビルドで、適用対象の固定imageではない。
+source確定後の再ビルドで版・SHA・サイズ・対象sectorを改めて固定する。
+`LabVoice`は8,192B以下のcompile-time制約を通過。実heap/stack、推論遅延、実声の品質は未測定。
+GPIO・PSRAM・partitionを変更しておらず、実機c032の1回許可を新candidateへ流用しない。
+
+`size-candidate`の静的DIRAMは292,895B（.bss 200,968B、.data 21,892B、.text 70,035B）、当該表示領域の残り48,865B。
+sizeの総image報告973,971Bとpaddingを含むbinの974,080Bを区別する。
+この静的残量を、起動後のheapや音声録音中に使える連続RAMの値とは扱わない。

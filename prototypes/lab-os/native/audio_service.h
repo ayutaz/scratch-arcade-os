@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 enum {LAB_AUDIO_CAN_PLAY=1,LAB_AUDIO_CAN_RECORD=2};
+/* Trusted provider-only scalar query. Not a guest audio opcode. */
+enum {LAB_AUDIO_VOICE_SNAPSHOT=65536};
 enum {LAB_AUDIO_IDLE=0,LAB_AUDIO_PLAYING,LAB_AUDIO_RECORDING,LAB_AUDIO_DRAINING,LAB_AUDIO_CLOSING};
 enum {LAB_AUDIO_BANK_FRAMES=4096,LAB_AUDIO_BANKS=8};
 typedef struct {int16_t *banks[LAB_AUDIO_BANKS];uint32_t frames;} LabAudioPcm;
@@ -23,7 +25,7 @@ typedef struct LabAudio {
     LabAudioIo io;
     int16_t *buffer;
     int16_t *banks[LAB_AUDIO_BANKS];
-    uint32_t capacity,owner,permissions,recorded,total,position,phase,started,limit_ms,kind,replay_gain;
+    uint32_t capacity,owner,permissions,recorded,total,position,phase,started,limit_ms,kind,replay_gain,lease_generation;
     int32_t replay_mean;
     uint32_t replay_scale_q15;
     int result,outcome;

@@ -17,7 +17,7 @@ void voice_free(void *p){Rig *r=p;r->closing=0;lab_audio_binding_close(&r->bindi
 int voice_call(void *p,unsigned op,unsigned value){Rig *r=p;return lab_audio_binding_call(&r->binding,op,value,0);}
 int voice_poll(void *p,unsigned now){return lab_audio_binding_poll(&((Rig*)p)->binding,now);}
 unsigned voice_value(void *p,unsigned field){Rig *r=p;switch(field){case 0:return r->opens;case 1:return r->audio.recorded;case 2:return r->written;case 3:return r->over_limit;case 4:return r->audio.driver_owned;case 5:return r->audio.owner;default:return 0;}}
-int voice_clean(void *p){Rig *r=p;for(unsigned i=0;i<8;i++)for(unsigned j=0;j<4096;j++)if(r->banks[i][j])return 0;for(unsigned i=0;i<32000;i++)if(r->contiguous[i])return 0;for(unsigned i=0;i<sizeof(r->voice);i++)if(((uint8_t*)&r->voice)[i])return 0;return 1;}
+int voice_clean(void *p){Rig *r=p;for(unsigned i=0;i<8;i++)for(unsigned j=0;j<4096;j++)if(r->banks[i][j])return 0;for(unsigned i=0;i<32000;i++)if(r->contiguous[i])return 0;for(unsigned i=0;i<sizeof(r->voice.workspace);i++)if(r->voice.workspace[i])return 0;for(unsigned i=0;i<sizeof(r->voice.features);i++)if(((uint8_t*)r->voice.features)[i])return 0;for(unsigned i=0;i<sizeof(r->voice.logits);i++)if(((uint8_t*)r->voice.logits)[i])return 0;return 1;}
 int voice_close(void *p,int fail){Rig *r=p;r->closing=fail;return lab_audio_binding_close(&r->binding);}
 
 /* Test-only injection into an already completed recording. */
@@ -29,4 +29,20 @@ int voice_fill_offset(void *p,int value,int contiguous){
   *at=(int16_t)value;
  }
  return 1;
+}
+
+int voice_fill_pcm(void *p,const int16_t *pcm,unsigned count,int contiguous){
+ Rig *r=p;if(!pcm || count!=32000 || r->audio.recorded!=32000 || r->audio.driver_owned ||
+             (contiguous!=0 && contiguous!=1))return 0;
+ r->audio.buffer=contiguous ? r->contiguous:NULL;
+ for(unsigned i=0;i<count;i++){
+  int16_t *out=r->audio.buffer ? r->audio.buffer+i:r->audio.banks[i/4096]+i%4096;
+  *out=pcm[i];
+ }
+ return 1;
+}
+
+/* Test the trusted provider directly; guest binding must reject this opcode. */
+int voice_native_status(void *p,unsigned owner,unsigned field){
+ Rig *r=p;return lab_voice_call(&r->voice,&r->audio,owner,65536,field,0);
 }

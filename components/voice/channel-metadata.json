@@ -1,0 +1,20 @@
+{
+  "runtime": "channel-adaptive-v1",
+  "input_contract": {
+    "conditioning": "hp160",
+    "frontend": "adaptive",
+    "peak": 4096,
+    "samples": 32000,
+    "rate": 16000
+  },
+  "threshold_q10": 995,
+  "weights_sha256": "374987a02446e805f18427d7de8de3cd955c4833efc6e0a9dbd9fa655c3c59f2",
+  "weights_bytes": 23884,
+  "frozen_sha256": "10897e4bfaaa3dbc5fe517e1fb25b074e4bf68f67ef306d777b3cf283f25255e",
+  "header_sha256": {
+    "feature_tables.h": "f880061b75d258240508ca9b8ca11d519c708e8643858a83d0128487b6e20edf",
+    "pet_model.h": "f04cbe0a5a9c495524b155da9b1e8a6284ce343db8ea5e647d0def73bef33548"
+  },
+  "device_tested": false,
+  "real_voice_tested": false
+}

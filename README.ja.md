@@ -62,7 +62,7 @@ uv sync --project firmware/esp-idf/host-tools --locked
 PYTHONPATH=prototypes/lab-os uv run --locked python -m labos.target build-candidate
 ```
 
-この手順はビルドだけを行います。`scripts/flash.sh`は実機への書き込みを拒否します。別途固定レビューを受けた音声入力補正版を1台へ適用しました。適用成功と認識品質は分けて確認します。[音声サービスの記録](docs/voice-service.md)・[検証記録](docs/validation.md)・[開発手順](docs/development.md)を参照してください。
+この手順はビルドだけを行います。`scripts/flash.sh`は実機への書き込みを拒否します。1台の実機では、別途固定レビューを受けた前の音声入力補正版が動いています。新しい音声モデルの候補はホスト試験とESP32-S3向けビルドを通過しましたが、実機では未検証です。適用成功と認識品質は分けて確認します。[音声サービスの記録](docs/voice-service.md)・[検証記録](docs/validation.md)・[開発手順](docs/development.md)を参照してください。
 
 ## 自作アプリの開発
 
