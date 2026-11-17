@@ -95,9 +95,10 @@ class DistributionTests(unittest.TestCase):
   from unittest import mock
   import hashlib
   b=module('bootstrap');data=b'checked public dependency constraints\n'
-  info=dict(url='https://dl.espressif.com/dl/esp-idf/espidf.constraints.v6.1.txt',sha256=hashlib.sha256(data).hexdigest())
+  info=dict(url='https://dl.espressif.com/dl/esp-idf/espidf.constraints.v6.1.txt',source='firmware/esp-idf/host-tools/constraints-v6.1.txt',sha256=hashlib.sha256(data).hexdigest())
   with tempfile.TemporaryDirectory() as d,mock.patch.object(b,'CONSTRAINTS',info),mock.patch.object(b,'download',return_value=data) as fetch:
+   source=Path(d)/info['source'];source.parent.mkdir(parents=True);source.write_bytes(data)
    p=b.ensure_constraints(Path(d));self.assertEqual(p.read_bytes(),data)
-   self.assertEqual(b.ensure_constraints(Path(d)),p);fetch.assert_called_once_with(info['url'],info['sha256'])
+   self.assertEqual(b.ensure_constraints(Path(d)),p);fetch.assert_not_called()
    p.write_bytes(b'changed')
    with self.assertRaises(ValueError):b.ensure_constraints(Path(d))
