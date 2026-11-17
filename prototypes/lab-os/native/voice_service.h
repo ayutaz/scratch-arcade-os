@@ -10,6 +10,7 @@ typedef struct {
     int32_t logits[7];
 } LabVoice;
 /* CLASSIFY consumes exactly one completed 2-second microphone recording;
+ * removes its mean in the private consumed buffer before the frozen frontend;
  * result -1 unavailable, 0..4 command, 5 unknown, 6 silence. Raw PCM and
  * feature scratch are scrubbed before return. REPLY 0..4 uses speaker only,
  * returns -1 invalid/unavailable, 0 busy/failure, 1 accepted. */
