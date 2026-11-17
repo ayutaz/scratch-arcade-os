@@ -54,7 +54,7 @@ class DistributionTests(unittest.TestCase):
   c=module('publication_check');paths=[]
   for folder,dirs,files in os.walk(ROOT):
    dirs[:]=[d for d in dirs if d not in c.FORBIDDEN]
-   paths.extend((Path(folder)/name).relative_to(ROOT).as_posix() for name in files)
+   paths.extend((Path(folder)/name).relative_to(ROOT).as_posix() for name in files if name!='.git')
   self.assertGreater(c.check_paths(ROOT,paths),100)
  def test_existing_wrong_revision_and_modified_dependency_are_rejected(self):
   import subprocess

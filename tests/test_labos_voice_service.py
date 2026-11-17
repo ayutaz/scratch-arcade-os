@@ -20,6 +20,7 @@ class VoiceServiceTests(unittest.TestCase):
         for name in ('voice_free','voice_clean'):getattr(cls.lib,name).argtypes=[C.c_void_p]
         for name in ('voice_poll','voice_value','voice_close'):getattr(cls.lib,name).argtypes=[C.c_void_p,C.c_uint]
         cls.lib.voice_call.argtypes=[C.c_void_p,C.c_uint,C.c_uint]
+        cls.lib.voice_fill_offset.argtypes=[C.c_void_p,C.c_int,C.c_int]
     def rig(self,caps=7):
         rig=self.lib.voice_new(caps);self.assertTrue(rig);self.addCleanup(self.lib.voice_free,rig);return rig
     def test_completed_recording_is_classified_once_then_pcm_and_workspace_are_scrubbed(self):
@@ -48,3 +49,14 @@ class VoiceServiceTests(unittest.TestCase):
         self.assertFalse(self.lib.voice_close(rig,1));self.assertEqual(self.lib.voice_value(rig,5),1)
         self.assertEqual(self.lib.voice_call(rig,10,0),-1)
         self.assertTrue(self.lib.voice_clean(rig));self.assertTrue(self.lib.voice_close(rig,0))
+
+    def test_constant_microphone_offset_is_silence_in_banked_and_contiguous_pcm(self):
+        for contiguous in (0,1):
+            for offset in (1600,-1600,32767,-32768):
+                with self.subTest(contiguous=contiguous,offset=offset):
+                    rig=self.rig();self.assertEqual(self.lib.voice_call(rig,2,2000),1)
+                    for i in range(125):self.lib.voice_poll(rig,i*16)
+                    self.assertEqual(self.lib.voice_fill_offset(rig,offset,contiguous),1)
+                    self.assertEqual(self.lib.voice_call(rig,9,0),6)
+                    self.assertEqual(self.lib.voice_value(rig,1),0)
+                    self.assertTrue(self.lib.voice_clean(rig))
