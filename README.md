@@ -62,7 +62,7 @@ uv sync --project firmware/esp-idf/host-tools --locked
 PYTHONPATH=prototypes/lab-os uv run --locked python -m labos.target build-candidate
 ```
 
-This only builds the firmware. `scripts/flash.sh` refuses device writes. Device testing was done during earlier development; the public-source rebuild has not been flashed again. See [validation](docs/validation.md) and [development instructions](docs/development.md) for the tested scope and installation limits.
+This only builds the firmware. `scripts/flash.sh` refuses device writes. A separately reviewed voice/input-offset firmware has been deployed on one board. Deployment and audio recognition quality are separate checks; see the [voice-service record](docs/voice-service.md), [validation](docs/validation.md) and [development instructions](docs/development.md).
 
 ## Make your own app
 

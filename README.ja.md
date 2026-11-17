@@ -62,7 +62,7 @@ uv sync --project firmware/esp-idf/host-tools --locked
 PYTHONPATH=prototypes/lab-os uv run --locked python -m labos.target build-candidate
 ```
 
-この手順はビルドだけを行います。`scripts/flash.sh`は実機への書き込みを拒否します。実機試験は切り出し前の開発中に行ったもので、公開ソースの再ビルド品は再書き込みしていません。[検証記録](docs/validation.md)と[開発手順](docs/development.md)に確認範囲と導入上の制約を記載しています。
+この手順はビルドだけを行います。`scripts/flash.sh`は実機への書き込みを拒否します。別途固定レビューを受けた音声入力補正版を1台へ適用しました。適用成功と認識品質は分けて確認します。[音声サービスの記録](docs/voice-service.md)・[検証記録](docs/validation.md)・[開発手順](docs/development.md)を参照してください。
 
 ## 自作アプリの開発
 

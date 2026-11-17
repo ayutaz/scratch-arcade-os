@@ -1,6 +1,6 @@
 # 日本語音声サービスの候補
 
-2026-11-17 JST。初版の固定image1affは個別許可後に1台へ適用し、Petの操作/返答/資源解放を自動確認。合成5語の音響試験は操作0/5。以下の入力DC補正版はホスト検証のみで、実機へ適用していない。
+2026-11-17 JST。初版の固定image1affは個別許可後に1台へ適用し、Petの操作/返答/資源解放を自動確認。合成5語の音響試験は操作0/5。入力DC補正版c032は追加の固定レビュー/個別許可後に1台へ適用し、起動前全量一致と16app保持を確認した。認識品質の判定は[Petの実機記録](https://github.com/ayutaz/arcade-ai-pet/blob/main/docs/device-validation.md)へ分離する。
 5操作の固定KWSと5つの返答を、既存の音声leaseへ接続した。
 自由文ASR、自由会話、本体内TTS、常時待受ではない。
 
@@ -96,10 +96,22 @@ Red/Greenは動作追加の先行契約に限り、この書式修正やbuildを
 uv run --locked python -m unittest discover -s tests -p test_labos_voice_service.py -v
 ```
 
-全回帰/対象build/CIと実機は分けて記録する。この修正の実声・音響経路は未検証。
+全回帰/対象build/CIと実機は分けて記録する。修正実装時点では実声・音響経路は未検証。後続の適用結果は次節へ記録する。
 
 全回帰の初回は701件中、公開候補一覧のfixtureがworktreeの`.git`ポインタfileを含めたため1エラー。
 Git metadataの除外をdirectoryだけでなく、このfileにも適用した。実際の公開境界checkerは`.git`を拒否するまま。
 この環境/試験fixtureの修正は、音声機能の先行Redには数えない。
 
 補正後の全回帰701件/skipなしGreen（82.267秒）。Markdown参照74件と公開境界378ファイルも成功。対象build/必須CIと実機は別工程。
+
+## 入力補正版の固定適用
+
+2026-11-17 JST。source56ff39e、PROJECT_VER=56ff39e、966,176B、SHA-256 `c0327a6929df379e05b1e5538bcc2bf74419959ee9c8780f69a06f1da841c143`。
+固定レビューへの個別許可後、app offset0x10000だけを1回更新した。
+直前Flash8MiBを2回取得してbyte/容量/SHAを照合し、reset前の8MiB読戻しが期待値と一致。
+対象外sector・bootloader/partition・NVS/専用FSを保持し、正常boot/READY/全16appの版/hash不変を確認した。
+GPIO/PSRAM/eFuse/securityは変更せず、raw PCMを取得していない。原本Flash・機器ID・生ログ・binをこのrepoへ公開しない。
+
+この結果は配備/保全/起動であり、音声認識の改善や人の声による合格とは別。固定1回許可は使用済みで、再試行・自動復元・別imageは含まない。
+
+最新の操作/音響結果は[Petの実機記録](https://github.com/ayutaz/arcade-ai-pet/blob/main/docs/device-validation.md)を参照。ここへ記載した配備結果だけを認識品質の証拠としない。
