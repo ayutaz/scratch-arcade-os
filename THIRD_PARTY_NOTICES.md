@@ -21,3 +21,7 @@ Apacheの適用/NOTICEについては[ASF公式](https://www.apache.org/legal/ap
 HTS Voice Mei/M001の帰属、CC BY 3.0と加工内容を記載。
 docs/linked-license-inventory.jsonは初回ESP-IDFリンク時の棚卸しで、この後続追加を含まない。
 現在の配布条件には本componentの条件も合わせる。
+
+ESP-IDFの配布constraints原本は、[constraints-v6.1.txt](firmware/esp-idf/host-tools/constraints-v6.1.txt)へ無改変で固定する。
+公式の元URL・SHA・生成元revisionとself-managed依存の扱いは[依存資料](docs/dependencies.md#constraints原本の固定)を参照。
+これは依存仕様の原本データであり、uv.lockの採用バージョンを置き換えるものではない。
