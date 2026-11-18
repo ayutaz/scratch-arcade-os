@@ -85,7 +85,14 @@ void test_session_udp_fault(LabBoardSession *s,int fail){udp_cleanup_failure=fai
 /* Protocol fixture only: deterministic provider scalars, no recorded PCM. */
 static int fixture_voice_snapshot(void *context,LabAudio *audio,uint32_t owner,uint32_t op,uint32_t field,uint32_t now){
  (void)now;
- if(context!=audio->voice_context || audio->owner!=owner || op!=LAB_AUDIO_VOICE_SNAPSHOT || field>17)return -1;
+ if(context!=audio->voice_context || audio->owner!=owner)return -1;
+ if(op==65537){
+  if(field>11)return -1;
+  const uint32_t scores[]={7,6,6,5,100,99,1,995,3,1234};
+  if(!field)return 1;
+  return field==11 ? (int32_t)audio->lease_generation:(int32_t)scores[field-1];
+ }
+ if(op!=LAB_AUDIO_VOICE_SNAPSHOT || field>17)return -1;
  if(!field)return 1;
  const uint32_t values[]={7,6,0,32000,1600,1600,1600,1600,0,0,0,1600,1600,1,3,1234};
  return field==17 ? (int32_t)audio->lease_generation:(int32_t)values[field-1];

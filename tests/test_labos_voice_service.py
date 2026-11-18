@@ -118,3 +118,42 @@ class VoiceServiceTests(unittest.TestCase):
         self.assertEqual(get(rig,1,3),1);self.assertEqual(get(rig,1,4),0)
         self.assertEqual(get(rig,1,14),0);self.assertTrue(self.lib.voice_clean(rig))
         speaker=self.rig(3);self.assertEqual(get(speaker,1,0),-1)
+
+
+class VoiceScoreSummaryTests(unittest.TestCase):
+    setUpClass=classmethod(VoiceServiceTests.setUpClass.__func__)
+    def test_ranked_scores_keep_signed_values_ties_and_full_uint32_margin(self):
+        class Summary(C.Structure):
+            _fields_=[('top1',C.c_uint32),('top2',C.c_uint32),('first',C.c_int32),('second',C.c_int32),('margin',C.c_uint32)]
+        fn=self.lib.lab_voice_rank;fn.argtypes=[C.POINTER(C.c_int32),C.c_size_t,C.POINTER(Summary)]
+        for raw,expected in [([-20,100,99,7,-8,-4,-5],(1,2,100,99,1)),
+                             ([8]*7,(0,1,8,8,0)),
+                             ([2147483647]+[-2147483648]*6,(0,1,2147483647,-2147483648,4294967295))]:
+            with self.subTest(raw=raw):
+                out=Summary();self.assertEqual(fn((C.c_int32*7)(*raw),7,C.byref(out)),1)
+                self.assertEqual((out.top1,out.top2,out.first,out.second,out.margin),expected)
+        out=Summary(1,2,3,4,5);self.assertEqual(fn((C.c_int32*7)(),6,C.byref(out)),0)
+        self.assertEqual(bytes(out),bytes(C.sizeof(out)))
+    def test_threshold_is_the_same_frozen_rejection_margin_used_by_inference(self):
+        self.assertEqual(self.lib.pet_rejection_threshold(),995)
+
+
+class VoiceScoreLeaseTests(unittest.TestCase):
+    setUpClass=classmethod(VoiceServiceTests.setUpClass.__func__)
+    rig=VoiceServiceTests.rig
+    def test_score_query_is_read_only_scrubbed_on_failure_and_current_lease_only(self):
+        fn=self.lib.voice_native_score_status;fn.argtypes=[C.c_void_p,C.c_uint,C.c_uint]
+        rig=self.rig();self.assertEqual(fn(rig,1,0),0)
+        self.assertEqual(self.lib.voice_call(rig,65537,0),-1)
+        self.assertEqual(self.lib.voice_call(rig,2,2000),1)
+        for i in range(125):self.lib.voice_poll(rig,i*16)
+        self.assertEqual(self.lib.voice_call(rig,9,0),6)
+        self.assertEqual(fn(rig,1,0),1);self.assertEqual(fn(rig,1,1),1)
+        self.assertEqual(fn(rig,1,2),6);self.assertEqual(fn(rig,1,3),6)
+        self.assertEqual(fn(rig,1,8),995);self.assertEqual(fn(rig,1,9),3);self.assertEqual(fn(rig,1,11),1)
+        self.assertNotEqual(fn(rig,1,3),fn(rig,1,4));self.assertTrue(self.lib.voice_clean(rig))
+        self.assertEqual(fn(rig,2,0),-1);self.assertEqual(fn(rig,1,12),-1)
+        self.assertEqual(self.lib.voice_call(rig,9,0),-1);self.assertEqual(fn(rig,1,0),0)
+        self.assertEqual(fn(rig,1,1),-1)
+        self.assertEqual(self.lib.voice_call(rig,6,0),1);self.assertEqual(fn(rig,1,0),0)
+        speaker=self.rig(3);self.assertEqual(fn(speaker,1,0),-1)

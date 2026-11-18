@@ -43,3 +43,30 @@ class VoiceSnapshotClientTests(unittest.TestCase):
                 client=self.client(data)
                 with self.assertRaises(TransferError):client.voice_status()
                 self.assertTrue(client.failed)
+
+
+class VoiceScoresClientTests(unittest.TestCase):
+    client=VoiceSnapshotClientTests.client
+    def good(self):return [1,1,9,5,1,2,100,99,1,995,3,5000,1]
+    def packet(self,values):return struct.pack('<3Ii2I2i5I',*values)+bytes(28)
+    def test_rejected_command_is_distinct_from_an_unknown_top_class(self):
+        c=self.client(self.packet(self.good()));r=c.voice_scores()
+        c._request.assert_called_once_with(15,struct.pack('<I',6))
+        self.assertEqual((r['result'],r['top1'],r['margin_q10'],r['threshold_q10']),(5,1,1,995))
+        v=self.good();v[4:6]=[5,2];v[6:8]=[2000,0];v[8]=2000
+        self.assertEqual(self.client(self.packet(v)).voice_scores()['top1'],5)
+    def test_unavailable_has_no_stale_scores_and_signed_extremes_are_valid(self):
+        self.assertEqual(self.client(self.packet([1]+[0]*12)).voice_scores()['available'],0)
+        v=self.good();v[3]=1;v[6:9]=[2147483647,-2147483648,4294967295]
+        self.assertEqual(self.client(self.packet(v)).voice_scores()['margin_q10'],4294967295)
+    def test_inconsistent_padding_ranking_margin_or_decision_poison_connection(self):
+        cases=[]
+        for index,value in [(0,2),(1,2),(2,0),(3,-1),(4,7),(5,1),(6,98),(8,2),(9,0),(10,2),(12,0)]:
+            v=self.good();v[index]=value;cases.append(self.packet(v))
+        v=self.good();v[3]=1;cases.append(self.packet(v))
+        v=self.good();v[1]=0;cases.append(self.packet(v))
+        cases += [self.packet(self.good())[:-1],self.packet(self.good())[:-1]+b'\1']
+        for raw in cases:
+            c=self.client(raw)
+            with self.subTest(raw=raw[:20]),self.assertRaises(TransferError):c.voice_scores()
+            self.assertTrue(c.failed)

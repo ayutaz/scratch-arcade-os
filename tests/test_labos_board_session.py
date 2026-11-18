@@ -463,6 +463,26 @@ class BoardSessionTests(SessionFixture, unittest.TestCase):
         result=self.raw(15,2,struct.pack('<I',5),session=777)
         self.assertEqual(result.status,0);self.assertEqual(result.payload,struct.pack('<I',1)+bytes(76))
 
+    def test_voice_scores_at_home_are_unavailable_and_cannot_open_microphone(self):
+        self.open();self.assertEqual(self.raw(2,1,struct.pack('<I',123)).status,0)
+        result=self.raw(15,2,struct.pack('<I',6))
+        self.assertEqual(result.status,0);self.assertEqual(result.payload,struct.pack('<I',1)+bytes(76))
+        self.assertEqual(self.lib.test_audio_calls(0),0)
+
+    def test_voice_scores_query_is_bound_to_running_microphone_owner_and_exit(self):
+        self.install_sound(True);self.open()
+        provider=self.lib.test_session_voice_fixture;provider.argtypes=[C.c_void_p]
+        self.assertEqual(provider(self.session),1);self.launch();self.key()
+        self.assertEqual(self.raw(2,1,struct.pack('<I',123)).status,0)
+        result=self.raw(15,2,struct.pack('<I',6));self.assertEqual(result.status,0)
+        self.assertEqual(struct.unpack('<3Ii2I2i5I',result.payload[:52]),(1,1,7,6,6,5,100,99,1,995,3,1234,1))
+        self.assertEqual(result.payload[52:],bytes(28));self.assertEqual(self.lib.test_audio_calls(0),0)
+        self.assertNotEqual(self.raw(15,3,struct.pack('<II',6,1)).status,0)
+        self.assertEqual(self.raw(10,4).status,0);self.key(5);self.key()
+        self.assertEqual(self.raw(2,1,struct.pack('<I',123),session=777).status,0)
+        result=self.raw(15,2,struct.pack('<I',6),session=777)
+        self.assertEqual(result.status,0);self.assertEqual(result.payload,struct.pack('<I',1)+bytes(76))
+
 
 class SessionConsoleGuardTests(SessionFixture, unittest.TestCase):
     console_flags = ('-DCONFIG_ESP_CONSOLE_SECONDARY_USB_SERIAL_JTAG=1',)

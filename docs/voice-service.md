@@ -1,5 +1,7 @@
 # 日本語音声サービスの候補
 
+現在の実機は個別レビュー済みe591/v3。認識品質は未達。後述の順位診断はホスト実装/予備buildまでで未適用。以下の初版/入力補正/v3候補の数値は当時の記録として残す。
+
 2026-11-17 JST。初版の固定image1affは個別許可後に1台へ適用し、Petの操作/返答/資源解放を自動確認。合成5語の音響試験は操作0/5。入力DC補正版c032は追加の固定レビュー/個別許可後に1台へ適用し、起動前全量一致と16app保持を確認した。認識品質の判定は[Petの実機記録](https://github.com/ayutaz/arcade-ai-pet/blob/main/docs/device-validation.md)へ分離する。
 5操作の固定KWSと5つの返答を、既存の音声leaseへ接続した。
 自由文ASR、自由会話、本体内TTS、常時待受ではない。
@@ -178,3 +180,47 @@ GPIO・PSRAM・partitionを変更しておらず、実機c032の1回許可を新
 `size-candidate`の静的DIRAMは292,895B（.bss 200,968B、.data 21,892B、.text 70,035B）、当該表示領域の残り48,865B。
 sizeの総image報告973,971Bとpaddingを含むbinの974,080Bを区別する。
 この静的残量を、起動後のheapや音声録音中に使える連続RAMの値とは扱わない。
+
+## 2026-11-18: 棄却前の候補を読む診断
+
+現行e591/v3の合成音響4条件は1/5・3/5・1/5・0/5で未達。源音のホスト対照や周波数診断が成功しても、実録音での誤分類と棄却のどちらかは分からない。次の診断はこの区別のためで、モデル/閾値や認識精度を変えた実装ではない。実機への適用は未実施。
+
+`Client.voice_scores()`は管理op15/control6、要求4B/返答80B（schema1）。既存control5は変更しない。
+稼働appの現在mic owner/leaseの分類成功時だけ、sequence/result・上位2候補・符号付きQ10 score・点差・固定閾値995・model3・時刻/leaseを返す。Q10 scoreは確率ではない。エラー時は既存`voice_status()`のresult/errorsを読み、古いscoreを再利用しない。
+
+- result5/top1<5/点差995未満: 操作語を選んだが棄却した。
+- result5/top1=5: モデル自体が対象外を上位に選んだ。
+- result6/top1=6: モデルの無音判定。録音回路が無音だった証明ではない。
+- 未分類・失敗・HOME/権限なし/旧leaseはavailable0と残りzero。2queryの値を合わせる際はsequence・lease・時刻・resultの一致が必要。
+
+上位2候補だけを保持し、全logit/PCM/MFCC/任意メモリの取得や録音開始の経路は追加しない。推論scratch/logit/PCMの消去を維持する。保持したscalarはowner/leaseの変更や終了後に非公開となり、分類失敗でも前回値を隠す。
+同点は小さいclass番号を優先し、点差はint64差分からuint32へ変換する。INT32の両端でも差4,294,967,295を保持する。閾値は同じ固定model headerから取得し、component原本/重み/来歴JSONを改変しない。
+
+### TDD記録
+
+| 対象 | 先行Red | Green |
+|---|---|---|
+| 順位/閾値・実C service | 未実装symbol2件、trusted queryの-1と期待0の不一致1件 | service10件/1.962秒。signed値/同点/最大差/不正長、guest拒否/現在lease/失敗時の非公開/PCM・scratch消去 |
+| Python parser | voice_scores未実装。missing methodに続く接続フラグの失敗は同じ未実装に由来 | 新旧parser6件/0.001秒。棄却と対象外、未取得、padding/順位/点差/閾値/判定不整合の拒否 |
+| BSP wire | 未対応control6でstatus1、期待0の2失敗 | 新旧BSP29件/3.123秒。HOME/稼働owner/終了後非公開、長さ拒否、micの暗黙起動なし |
+
+serviceの最初の実装はstddef.h不足でcompile失敗し、include追加後に成功した。これは先行Redと別の実装途中の失敗で、元ログを保持する。
+wire fixtureは既存control5と同じsequence/resultの決定的scalarで、実録音の証拠ではない。query6の追加に伴い、既存の不正subcommandの試験値を未対応7へ移した。
+
+```sh
+uv run --locked python -m unittest discover -s tests -p test_labos_voice_service.py -v
+uv run --locked python -m unittest discover -s tests -p test_voice_snapshot_client.py -v
+uv run --locked python -m unittest discover -s tests -p test_labos_board_session.py -v
+```
+
+ホストの成功を実機の認識精度/聴取/画面/物理入力へ広げない。次は全回帰・S3 build・固定imageレビューで、書き込みには別の個別許可が必要。
+
+### 今回の回帰と予備build
+
+全723件/114.779秒・skipなしで成功。実行中に加えたupload中のcontrol6の読み取り/取引保持の追加照合は、別途transfer36件/1.448秒で成功した。この後付け回帰を先行TDDとは数えない。
+純粋な順位計算の追加照合では、7値の全5,040順列がPythonの独立した並べ替えと一致した。音声認識の独立精度評価ではない。
+
+S3予備bin974,432B、slot残り74,144B。静的DIRAM292,911B/残り48,849B、BSS200,984B。e591からの差はbin352B/BSS16Bで、追加PCM領域/PSRAMはない。コミット前の予備buildであり、適用対象の版/hashではない。
+最初のsize取得はIDFが設定時のPythonと実行時のpython3別名の相違を拒否した。同じuv管理環境の設定済みinterpreter pathで再実行し成功した。guardを外したりbuild cacheを書き換えたりしていない。
+
+固定targetのcompile commandに`-fstack-usage`を加えた追加計測では、変更した`lab_voice_call`の自フレーム128B、順位/閾値関数は各32Bだった。呼出し先や割込みを含む最大stack/実機high-waterの測定ではない。

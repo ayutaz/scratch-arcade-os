@@ -62,7 +62,9 @@ uv sync --project firmware/esp-idf/host-tools --locked
 PYTHONPATH=prototypes/lab-os uv run --locked python -m labos.target build-candidate
 ```
 
-This only builds the firmware. `scripts/flash.sh` refuses device writes. One board runs an earlier, separately reviewed voice/input-offset firmware. The new voice-model candidate passes host tests and an ESP32-S3 build; it has not been tested on the board. Deployment and recognition quality are separate checks; see the [voice-service record](docs/voice-service.md), [validation](docs/validation.md) and [development instructions](docs/development.md).
+This only builds the firmware. `scripts/flash.sh` refuses device writes.
+
+One board runs the separately reviewed v3 voice firmware, but voice recognition still misses the device quality target. New ranking diagnostics pass host tests and an ESP32-S3 build; they are not installed on the board. See the [voice-service record](docs/voice-service.md), [validation](docs/validation.md) and [development instructions](docs/development.md).
 
 ## Make your own app
 
