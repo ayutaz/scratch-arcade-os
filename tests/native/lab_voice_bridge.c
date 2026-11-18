@@ -46,3 +46,7 @@ int voice_fill_pcm(void *p,const int16_t *pcm,unsigned count,int contiguous){
 int voice_native_status(void *p,unsigned owner,unsigned field){
  Rig *r=p;return lab_voice_call(&r->voice,&r->audio,owner,65536,field,0);
 }
+
+int voice_native_score_status(void *p,unsigned owner,unsigned field){
+ Rig *r=p;return lab_voice_call(&r->voice,&r->audio,owner,65537,field,0);
+}

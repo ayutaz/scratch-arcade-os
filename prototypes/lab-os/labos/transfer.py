@@ -341,6 +341,31 @@ class Client:
             raise TransferError('invalid voice snapshot') from None
         return v
 
+    def voice_scores(self):
+        """現在のmic leaseの上位2候補と棄却余裕。音声・特徴配列を取得しない。"""
+        reply=self._request(15,struct.pack('<I',6))
+        names=('version','available','sequence','result','top1','top2','first_score_q10','second_score_q10',
+               'margin_q10','threshold_q10','model_revision','observed_at_ms','lease_generation')
+        try:
+            if len(reply)!=80 or any(reply[52:]):raise ValueError('length/padding')
+            values=struct.unpack_from('<3Ii2I2i5I',reply);v=dict(zip(names,values))
+            if v['version']!=1 or v['available']>1:raise ValueError('schema/available')
+            if not v['available']:
+                if any(values[2:]):raise ValueError('stale unavailable scores')
+            else:
+                if (not v['sequence'] or not v['lease_generation'] or v['model_revision']!=3 or
+                    not 0<=v['result']<=6 or not 0<=v['top1']<=6 or not 0<=v['top2']<=6 or
+                    v['top1']==v['top2'] or v['first_score_q10']<v['second_score_q10'] or
+                    (v['first_score_q10']==v['second_score_q10'] and v['top1']>v['top2']) or
+                    v['margin_q10']!=v['first_score_q10']-v['second_score_q10'] or
+                    v['threshold_q10']!=995):raise ValueError('score fields')
+                expected=5 if v['top1']<5 and v['margin_q10']<v['threshold_q10'] else v['top1']
+                if v['result']!=expected:raise ValueError('inconsistent rejected result')
+        except (ValueError,TypeError,struct.error):
+            self.failed=True
+            raise TransferError('invalid voice scores') from None
+        return v
+
     def audio_metrics(self):
         """完了した現在の録音の集計だけを読む。PCM・録音履歴は取得しない。"""
         reply=self._request(15,struct.pack('<I',4))

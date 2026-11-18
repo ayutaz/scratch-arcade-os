@@ -151,7 +151,7 @@ class TransferTests(fs.LittleFsFixture, unittest.TestCase):
     def test_control_requires_an_explicit_provider_and_canonical_input(self):
         client=self.client()
         self.assertEqual(self.raw(15,client.request,struct.pack('<I',1)).status,8);client.request+=1
-        for payload in (b'',struct.pack('<I',6),struct.pack('<3I',2,256,100),
+        for payload in (b'',struct.pack('<I',7),struct.pack('<3I',2,256,100),
                         struct.pack('<3I',2,16,19),struct.pack('<3I',2,16,251),struct.pack('<4I',2,16,100,0)):
             self.assertEqual(self.raw(15,client.request,payload).status,1);client.request+=1
         client.close()
@@ -551,4 +551,8 @@ class TransferTests(fs.LittleFsFixture, unittest.TestCase):
         self.assertTrue(self.lib.test_transfer_busy(self.receiver))
         self.assertEqual(self.lib.test_home_count(self.store),before)
         self.assertEqual(self.control_calls[0][0],struct.pack('<I',5))
+        self.assertEqual(client.voice_scores()['available'],0)
+        self.assertEqual(self.control_calls[1][0],struct.pack('<I',6))
+        self.assertTrue(self.lib.test_transfer_busy(self.receiver))
+        self.assertEqual(self.lib.test_home_count(self.store),before)
         client._request(6);client.close()
