@@ -71,3 +71,9 @@ uv run --locked python tools/test.py
 
 
 実sourceの別cloneにもローカル限定のv0.1.0タグを作り、配布CLIで361ファイルのsource archiveを生成した。README.ja.mdの収録、firmware/録音の不在、SHA-256一致を確認。fixtureのタグはpushせず、GitHub Releaseを作成していない。
+
+## 2026-11-20のMac runner指定
+
+PR16のrun44564695682では`macos-15`のhost/target両jobがrunner未割当・step未開始で待機した。`macos-15-intel`を明示し、別の公開Pet CIで成功したIntel環境へ合わせる。`macos-15`が廃止されたという判断ではなく、開始時刻の保証でもない。[GitHub公式仕様](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)で標準公開repo向けIntel labelを確認した。
+
+必須4job名/保護条件、全host試験、固定ESP-IDF build、read-only権限とreport境界は維持する。有料large/self-hostedへの変更や検査の省略は行わない。先行2契約で旧labelのRed→変更後Green。既存CI契約も回帰検査する。
