@@ -5,11 +5,11 @@
 #include "replies.h"
 #if LAB_VOICE_LOGMEL
 #include "dscnn.h"
-#include "logmel_features.h"
+#include "logmel_compact.h"
 #include "logmel_model.h"
-#define VOICE_SCRATCH pet_logmel_feature_scratch_size
-#define VOICE_EXTRACT pet_logmel_features
-#define VOICE_EXTRACT_BANKED pet_logmel_features_banked
+#define VOICE_SCRATCH pet_logmel_compact_scratch_size
+#define VOICE_EXTRACT pet_logmel_compact_features
+#define VOICE_EXTRACT_BANKED pet_logmel_compact_features_banked
 #elif LAB_VOICE_CONTEXT_DURATION
 #include "decision_features.h"
 #include "decision_model.h"
@@ -25,11 +25,11 @@
 #define VOICE_PREDICT pet_predict
 #endif
 #include <string.h>
-_Static_assert(sizeof(LabVoice)<=(LAB_VOICE_LOGMEL ? 36000:8192),"bounded selected voice scratch");
+_Static_assert(sizeof(LabVoice)<=(LAB_VOICE_LOGMEL ? 27000:8192),"bounded selected voice scratch");
 static int voice_predict(LabVoice *voice) {
 #if LAB_VOICE_LOGMEL
     if(pet_dscnn_predict(voice->features,LAB_VOICE_FEATURE_COUNT,pet_logmel_layers,6,
-       voice->logits,7,voice->workspace,sizeof(voice->workspace))!=1)return -1;
+       voice->logits,7,voice->inference_workspace,sizeof(voice->inference_workspace))!=1)return -1;
     return pet_dscnn_classify(voice->logits,7,pet_logmel_thresholds,5);
 #else
     return VOICE_PREDICT(voice->features,LAB_VOICE_FEATURE_COUNT,voice->logits,7);

@@ -70,7 +70,7 @@ if(NOT _compiled_tables STREQUAL _exported_tables)
   message(FATAL_ERROR "Logmel mathematical tables differ from the compiled tables")
 endif()
 set(LAB_VOICE_SOURCES
-    "${LAB_ROOT}/components/voice/logmel_features.c"
+    "${LAB_ROOT}/components/voice/logmel_compact.c"
     "${LAB_ROOT}/components/voice/channel_prepare.c"
     "${LAB_ROOT}/components/voice/dscnn.c")
 set(LAB_VOICE_LOGMEL_ENABLED TRUE)

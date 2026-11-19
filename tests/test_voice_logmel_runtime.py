@@ -29,7 +29,7 @@ def assets(directory):
 
 def compile_service(directory):
     model=assets(directory/'assets');native=ROOT/'prototypes/lab-os/native';component=ROOT/'components/voice'
-    sources=[native/'audio_service.c',native/'audio_binding.c',native/'voice_service.c',component/'logmel_features.c',component/'channel_prepare.c',component/'dscnn.c',ROOT/'tests/native/lab_voice_bridge.c']
+    sources=[native/'audio_service.c',native/'audio_binding.c',native/'voice_service.c',component/'logmel_compact.c',component/'channel_prepare.c',component/'dscnn.c',ROOT/'tests/native/lab_voice_bridge.c']
     command=['clang','-O2','-std=c11','-Wall','-Wextra','-Werror','-ffp-contract=off','-shared','-fPIC','-DLAB_VOICE_LOGMEL=1','-I'+str(native),'-I'+str(component),'-I'+str(model),'-I'+str(ROOT/'downloads/os-research/wamr-upstream/core/iwasm/include'),*map(str,sources),'-lm','-o',str(directory/'voice.so')]
     run=subprocess.run(command,capture_output=True,text=True,timeout=30)
     if run.returncode:raise AssertionError(run.stderr)
@@ -98,7 +98,7 @@ class LogmelVoiceCMakeTests(unittest.TestCase):
                 root=Path(tmp).resolve();model=assets(root/'assets') if enabled else None;r=self.configure(root,model);self.assertEqual(r.returncode,0,r.stderr)
                 selected=(root/'build/selected.txt').read_text();flags=(root/'build/flags.txt').read_text()
                 if enabled:
-                    self.assertIn('/dscnn.c',selected);self.assertIn('/logmel_features.c',selected);self.assertNotIn('/kws_inference.c',selected);self.assertIn('LAB_VOICE_LOGMEL=1',flags)
+                    self.assertIn('/dscnn.c',selected);self.assertIn('/logmel_compact.c',selected);self.assertNotIn('/kws_inference.c',selected);self.assertIn('LAB_VOICE_LOGMEL=1',flags)
                 else:self.assertIn('/kws_inference.c',selected);self.assertNotIn('/dscnn.c',selected)
     def test_missing_wrong_contract_hash_or_conflicting_runtime_refuses_configuration(self):
         for kind in ('missing','runtime','features','threshold','header','tables','numeric','weights','conflict'):

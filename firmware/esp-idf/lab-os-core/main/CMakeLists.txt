@@ -51,6 +51,6 @@ endif()
 if(LAB_VOICE_LOGMEL_ENABLED)
   target_compile_definitions(${COMPONENT_LIB} PRIVATE LAB_VOICE_LOGMEL=1)
   target_include_directories(${COMPONENT_LIB} PRIVATE "${LAB_VOICE_LOGMEL_ASSETS}")
-  set_source_files_properties("${LAB_ROOT}/components/voice/logmel_features.c"
+  set_source_files_properties("${LAB_ROOT}/components/voice/logmel_compact.c"
       PROPERTIES COMPILE_OPTIONS "-ffp-contract=off;-fno-fast-math")
 endif()
