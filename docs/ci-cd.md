@@ -77,3 +77,5 @@ uv run --locked python tools/test.py
 PR16のrun44564695682では`macos-15`のhost/target両jobがrunner未割当・step未開始で待機した。`macos-15-intel`を明示し、別の公開Pet CIで成功したIntel環境へ合わせる。`macos-15`が廃止されたという判断ではなく、開始時刻の保証でもない。[GitHub公式仕様](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)で標準公開repo向けIntel labelを確認した。
 
 必須4job名/保護条件、全host試験、固定ESP-IDF build、read-only権限とreport境界は維持する。有料large/self-hostedへの変更や検査の省略は行わない。先行2契約で旧labelのRed→変更後Green。既存CI契約も回帰検査する。
+
+Intel指定のrun44566391991は準備段階で失敗した。固定Zig/host bootstrapがDarwin arm64専用である点を見落としていたため、`macos-26`（標準ARM64）へ修正した。旧失敗を成功に数えず、先行のarchitecture契約でIntel拒否のRedを再現し、同じ3契約と既存CI検査をGreen確認する。最新headの必須4CIを別に待つ。
