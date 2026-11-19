@@ -1,6 +1,6 @@
 # 日本語音声サービスの候補
 
-現在の実機は個別レビュー済みe591/v3。認識品質は未達。後述の順位診断はホスト実装/予備buildまでで未適用。以下の初版/入力補正/v3候補の数値は当時の記録として残す。
+現在の実機は順位診断を含む個別レビュー済みa553/v3。最新の実声は正解6/15・負例誤反応0/15・nativeエラー0で、品質は未達。[実声の記録](https://github.com/ayutaz/arcade-ai-pet/blob/main/docs/voice-validation.md)。新しい[261特徴のホスト接続](voice-context-runtime.md)は別工程で、実機へ適用していない。以下の初版/入力補正/v3候補や「未適用」の数値は当時の記録として残す。
 
 2026-11-17 JST。初版の固定image1affは個別許可後に1台へ適用し、Petの操作/返答/資源解放を自動確認。合成5語の音響試験は操作0/5。入力DC補正版c032は追加の固定レビュー/個別許可後に1台へ適用し、起動前全量一致と16app保持を確認した。認識品質の判定は[Petの実機記録](https://github.com/ayutaz/arcade-ai-pet/blob/main/docs/device-validation.md)へ分離する。
 5操作の固定KWSと5つの返答を、既存の音声leaseへ接続した。

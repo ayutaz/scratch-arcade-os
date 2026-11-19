@@ -1,0 +1,12 @@
+{
+  "repository": "https://github.com/ayutaz/arcade-ai-pet",
+  "commit": "727f9d663e22af125ea122928e73b83bc72045e7",
+  "license": "Apache-2.0",
+  "files": {
+    "decision_features.c": "0b366a0ae1a72404cd5454c31bbd01a744f2301ff914bfcd32d9a6ea9277a2e2",
+    "decision_features.h": "3fe2a1a7a8ddbd7ec0dca23284555a1658e4c0c7f635b9344ce506716775048a",
+    "decision_inference.c": "a77379ac697e539de2c6c4dffa2b15050c8900e899c99f8666fa6ac212a7266b"
+  },
+  "model_weights_included": false,
+  "device_tested": false
+}

@@ -64,7 +64,9 @@ PYTHONPATH=prototypes/lab-os uv run --locked python -m labos.target build-candid
 
 この手順はビルドだけを行います。`scripts/flash.sh`は実機への書き込みを拒否します。
 
-1台では個別レビュー済みのv3音声版が動いていますが、認識品質は目標未達です。新しい順位診断はホスト試験とESP32-S3向けビルドを通過し、実機にはまだ適用していません。[音声サービスの記録](docs/voice-service.md)・[検証記録](docs/validation.md)・[開発手順](docs/development.md)を参照してください。
+1台では順位診断を含む個別レビュー済みのv3音声版が動いています。最新の実声試験は6/15語が正解で、認識品質は目標未達です。[音声サービスの記録](docs/voice-service.md)・[検証記録](docs/validation.md)・[開発手順](docs/development.md)を参照してください。
+
+別途検証したモデルのexportを使う[261特徴の音声ランタイム](docs/voice-context-runtime.md)も、ホスト実験向けに明示選択できます。実機の受入は未完了です。
 
 ## 自作アプリの開発
 
