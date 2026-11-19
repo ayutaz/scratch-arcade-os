@@ -7,13 +7,22 @@ bool lab_board_sound_init(LabBoardSound *s,int profile) {
     s->profile=profile;s->configured=true;return true;
 }
 bool lab_board_sound_set_voice(LabBoardSound *s,void *context,int (*call)(void *,LabAudio *,uint32_t,uint32_t,uint32_t,uint32_t)) {
-    if(!s || !s->configured || !context || !call || s->pcm.frames || s->driver.channel || s->manager.binding.audio)return false;
-    s->voice_context=context;s->voice_call=call;return true;
+    if(!s || !s->configured || !context || !call || s->pcm.frames || s->driver.channel || s->manager.binding.audio || s->voice_owned)return false;
+    s->voice_factory=(LabBoardVoice){0};s->voice_context=context;s->voice_call=call;return true;
+}
+bool lab_board_sound_set_voice_factory(LabBoardSound *s,const LabBoardVoice *factory) {
+    if(!s || !s->configured || !factory || !factory->acquire || !factory->release || !factory->call ||
+       s->pcm.frames || s->driver.channel || s->manager.binding.audio || s->voice_owned)return false;
+    s->voice_factory=*factory;s->voice_context=NULL;s->voice_call=factory->call;return true;
 }
 bool lab_board_sound_close(LabBoardSound *s) {
     if(!s)return false;
     if(!lab_audio_binding_close(&s->manager.binding))return false;
     if(!lab_board_audio_close(&s->driver))return false;
+    if(s->voice_owned) {
+        if(!s->voice_factory.release(s->voice_factory.context,s->voice_context))return false;
+        s->voice_context=NULL;s->voice_owned=false;s->audio.voice_context=NULL;
+    }
     if(s->pcm.frames) {
         if(!lab_audio_pcm_banks_free(&s->pcm))return false;
         s->frames=0;
@@ -23,8 +32,13 @@ bool lab_board_sound_close(LabBoardSound *s) {
 static bool acquire(void *context,uint32_t caps,LabVmAudio *out) {
     LabBoardSound *s=context;
     if(!s || !s->configured || !out || s->pcm.frames || s->driver.channel ||
-       s->manager.binding.audio || caps>LAB_VM_CAP_ALL || !(caps&6))return false;
+       s->manager.binding.audio || s->voice_owned || caps>LAB_VM_CAP_ALL || !(caps&6))return false;
     uint32_t frames=(caps&LAB_VM_CAP_MICROPHONE) ? 32000 : 16000;
+    if((caps&LAB_VM_CAP_MICROPHONE) && s->voice_factory.acquire) {
+        s->voice_context=s->voice_factory.acquire(s->voice_factory.context);
+        if(!s->voice_context)return false;
+        s->voice_owned=true;
+    }
     if(!lab_audio_pcm_banks_alloc(&s->pcm,frames))return false;
     s->frames=frames;
     LabAudioIo io=lab_board_audio_services(&s->driver);

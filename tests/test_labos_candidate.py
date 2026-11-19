@@ -88,6 +88,7 @@ class CandidateTests(unittest.TestCase):
               #include "esp_pthread.h"
               #include <stdlib.h>
               static unsigned mode,steps,closes,delays,bad,binds,states,voices;static uint32_t now=100;
+              static LabBoardVoice voice_factory;static void *voice_instance;static unsigned voice_allocs,voice_frees;
               static char trace[160];static unsigned used,on_thread,created,joined;static void *(*entry)(void *);
               esp_pthread_cfg_t esp_pthread_get_default_config(void){return (esp_pthread_cfg_t){.stack_size=3072,.prio=5,.pin_to_core=-1};}
               int esp_pthread_set_cfg(const esp_pthread_cfg_t *c){
@@ -123,9 +124,17 @@ class CandidateTests(unittest.TestCase):
               int lab_voice_call(void *c,LabAudio *a,uint32_t owner,uint32_t op,uint32_t value,uint32_t time){
                 (void)c;(void)a;(void)owner;(void)op;(void)value;(void)time;return -1;
               }
-              bool lab_board_sound_set_voice(LabBoardSound *s,void *context,int (*call)(void *,LabAudio *,uint32_t,uint32_t,uint32_t,uint32_t)){
-                if(!on_thread || !s || !context || call!=lab_voice_call || steps || closes || binds || states)bad=1;
-                voices++;return mode!=7;
+              int16_t *lab_audio_pcm_alloc(uint32_t frames){
+                if(!on_thread || frames*2!=sizeof(LabVoice) || frames*2<26672 || voice_instance)bad=1;
+                voice_allocs++;void *p=malloc(frames*2);if(p)memset(p,0xa5,frames*2);return p;
+              }
+              bool lab_audio_pcm_free(int16_t *p,uint32_t frames){
+                if(!on_thread || p!=voice_instance || frames*2!=sizeof(LabVoice) || closes<2)bad=1;
+                voice_frees++;memset(p,0,frames*2);free(p);voice_instance=NULL;return true;
+              }
+              bool lab_board_sound_set_voice_factory(LabBoardSound *s,const LabBoardVoice *factory){
+                if(!on_thread || !s || !factory || factory->context || !factory->acquire || !factory->release || factory->call!=lab_voice_call || steps || closes || binds || states || voice_allocs)bad=1;
+                voice_factory=*factory;voices++;return mode!=7;
               }
               bool lab_state_mount_attach(LabStateMount *s,LabHome *h,lfs_t *fs,bool create){
                 if(!on_thread || !s || !h || !fs || !create || steps || closes)bad=1;
@@ -134,14 +143,17 @@ class CandidateTests(unittest.TestCase):
               int lab_board_boot_step(LabBoardBoot *b,uint32_t t){
                 if(!b || t<100 || (steps && t==100))bad=1;
                 steps++;b->session.home.mode=steps==1 ? LAB_RUNNING : LAB_HOME;
+                if(steps==1){voice_instance=voice_factory.acquire(voice_factory.context);if(!voice_instance)bad=1;
+                    else for(size_t i=0;i<sizeof(LabVoice);i++)if(((unsigned char*)voice_instance)[i])bad=1;}
                 b->gc.active=steps>=2;b->session.usb.transfer.session=steps>=2 ? 7 : 0;
                 if(steps==3)b->ready=false;return steps==3 ? LAB_LOOP_STOPPED : LAB_LOOP_INPUT_ERROR;
               }
               bool lab_board_boot_close(LabBoardBoot *b){if(!b)bad=1;
                 b->ready=false;b->gc.active=false;b->session.usb.transfer.session=0;
-                if(++closes<2)return false;b->runtime_owned=false;return true;}
+                if(++closes<2)return false;if(voice_instance && !voice_factory.release(voice_factory.context,voice_instance))bad=1;b->runtime_owned=false;return true;}
               void app_main(void);
               int main(int argc,char **argv){mode=argc>1 ? atoi(argv[1]) : 0;app_main();
+                if((mode==0 || mode==3) ? (voice_allocs!=1 || voice_frees!=1) : (voice_allocs || voice_frees))bad=1;
                 if(mode!=4 && mode!=5 && (created!=1 || joined!=1))bad=1;
                 if((mode==4 || mode==5) && (steps || closes || created || joined))bad=1;
                 printf("steps=%u closes=%u delays=%u bad=%u binds=%u states=%u voices=%u trace=%s\\n",steps,closes,delays,bad,binds,states,voices,trace);return bad;}
@@ -152,7 +164,7 @@ class CandidateTests(unittest.TestCase):
                       contract.SOURCE / 'core/iwasm/include')]
             exe = folder / 'entry'
             p = subprocess.run(['/usr/bin/clang', '-std=c11', '-Wall', '-Wextra', '-Werror', *flags,
-                                str(MAIN / 'candidate_main.c'), str(folder / 'fixture.c'), '-o', str(exe)],
+                                '-DLAB_VOICE_LOGMEL=1',str(MAIN / 'candidate_main.c'), str(folder / 'fixture.c'), '-o', str(exe)],
                                capture_output=True, text=True, timeout=30)
             self.assertEqual(p.returncode, 0, p.stderr)
             for mode, expected in ((0, 'steps=3 closes=2 delays=3 bad=0 binds=1 trace=1:0,2:3,2:7,2:27,4:25,5:25,5:1,6:0,'),

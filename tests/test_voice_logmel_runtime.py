@@ -126,3 +126,12 @@ class LogmelVoiceCMakeTests(unittest.TestCase):
         self.assertFalse((base/'logmel_model.h').exists());self.assertFalse(p['model_weights_included'])
 
 if __name__=='__main__':unittest.main()
+
+class StatelessSpeakerReplyTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):LogmelVoiceServiceTests.setUpClass.__func__(cls)
+    def test_speaker_only_reply_needs_no_recognition_context_but_cannot_classify(self):
+        self.lib.voice_detach_context.argtypes=[C.c_void_p]
+        r=self.lib.voice_new(3);self.assertTrue(r);self.addCleanup(self.lib.voice_free,r);self.lib.voice_detach_context(r)
+        self.assertEqual(self.lib.voice_call(r,9,0),-1);self.assertEqual(self.lib.voice_native_status(r,1,0),-1)
+        self.assertEqual(self.lib.voice_call(r,10,0),1);self.assertTrue(self.lib.voice_close(r,0))
