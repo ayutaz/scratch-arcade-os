@@ -3,7 +3,14 @@
 #include "guest_vm.h"
 #include "channel_features.h"
 #include "replies.h"
-#if LAB_VOICE_CONTEXT_DURATION
+#if LAB_VOICE_LOGMEL
+#include "dscnn.h"
+#include "logmel_features.h"
+#include "logmel_model.h"
+#define VOICE_SCRATCH pet_logmel_feature_scratch_size
+#define VOICE_EXTRACT pet_logmel_features
+#define VOICE_EXTRACT_BANKED pet_logmel_features_banked
+#elif LAB_VOICE_CONTEXT_DURATION
 #include "decision_features.h"
 #include "decision_model.h"
 #define VOICE_SCRATCH pet_decision_feature_scratch_size
@@ -18,20 +25,31 @@
 #define VOICE_PREDICT pet_predict
 #endif
 #include <string.h>
-_Static_assert(sizeof(LabVoice)<=8192,"bounded voice scratch");
+_Static_assert(sizeof(LabVoice)<=(LAB_VOICE_LOGMEL ? 36000:8192),"bounded selected voice scratch");
+static int voice_predict(LabVoice *voice) {
+#if LAB_VOICE_LOGMEL
+    if(pet_dscnn_predict(voice->features,LAB_VOICE_FEATURE_COUNT,pet_logmel_layers,6,
+       voice->logits,7,voice->workspace,sizeof(voice->workspace))!=1)return -1;
+    return pet_dscnn_classify(voice->logits,7,pet_logmel_thresholds,5);
+#else
+    return VOICE_PREDICT(voice->features,LAB_VOICE_FEATURE_COUNT,voice->logits,7);
+#endif
+}
 static void wipe(void *pointer,size_t count) {volatile uint8_t *p=pointer;while(count--)*p++=0;}
 static void scrub_voice(LabVoice *v) {
     wipe(v->workspace,sizeof(v->workspace));wipe(v->features,sizeof(v->features));wipe(v->logits,sizeof(v->logits));
 }
 uint32_t lab_voice_rejection_threshold(uint32_t top_class) {
     if(top_class>6)return UINT32_MAX;
-#if LAB_VOICE_CONTEXT_DURATION
+#if LAB_VOICE_LOGMEL
+    return top_class<5 ? (uint32_t)pet_logmel_thresholds[top_class]:0;
+#elif LAB_VOICE_CONTEXT_DURATION
     return top_class<5 ? (uint32_t)pet_decision_thresholds[top_class]:0;
 #else
     return PET_THRESHOLD;
 #endif
 }
-#if !LAB_VOICE_CONTEXT_DURATION
+#if !LAB_VOICE_CONTEXT_DURATION && !LAB_VOICE_LOGMEL
 uint32_t pet_rejection_threshold(void) {return lab_voice_rejection_threshold(0);}
 #endif
 int lab_voice_rank(const int32_t *logits,size_t count,LabVoiceScores *out) {
@@ -109,7 +127,7 @@ int lab_voice_call(void *context,LabAudio *audio,uint32_t owner,uint32_t op,uint
         voice->observed[13]=result==1;
         if(!lab_audio_forget_recording(audio,owner))result=-1;
         if(result==1) {
-            result=VOICE_PREDICT(voice->features,LAB_VOICE_FEATURE_COUNT,voice->logits,7);
+            result=voice_predict(voice);
             if(result>=0)voice->scores_valid=lab_voice_rank(voice->logits,7,&voice->scores)==1;
         }
         return observe_finish(voice,result);

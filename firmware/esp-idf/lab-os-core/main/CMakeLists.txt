@@ -8,8 +8,15 @@ set(LAB_VOICE_SOURCES
     "${LAB_ROOT}/components/voice/channel_features.c"
     "${LAB_ROOT}/components/voice/channel_prepare.c"
     "${LAB_ROOT}/components/voice/kws_inference.c")
+if(DEFINED LAB_VOICE_LOGMEL_ASSETS AND NOT "${LAB_VOICE_LOGMEL_ASSETS}" STREQUAL "" AND
+   DEFINED LAB_VOICE_CONTEXT_ASSETS AND NOT "${LAB_VOICE_CONTEXT_ASSETS}" STREQUAL "")
+  message(FATAL_ERROR "Select only one optional voice runtime")
+endif()
 if(DEFINED LAB_VOICE_CONTEXT_ASSETS AND NOT "${LAB_VOICE_CONTEXT_ASSETS}" STREQUAL "")
   include("${CMAKE_CURRENT_LIST_DIR}/voice_context.cmake")
+endif()
+if(DEFINED LAB_VOICE_LOGMEL_ASSETS AND NOT "${LAB_VOICE_LOGMEL_ASSETS}" STREQUAL "")
+  include("${CMAKE_CURRENT_LIST_DIR}/voice_logmel.cmake")
 endif()
 idf_component_register(
   SRCS "${LAB_ENTRY}" ${LAB_DIAGNOSTIC_SOURCE} "usb_transfer.c" "board_input.c" "board_display.c" "board_session.c" "flash_volume.c"
@@ -40,4 +47,10 @@ idf_component_register(
 if(LAB_VOICE_CONTEXT_ENABLED)
   target_compile_definitions(${COMPONENT_LIB} PRIVATE LAB_VOICE_CONTEXT_DURATION=1)
   target_include_directories(${COMPONENT_LIB} PRIVATE "${LAB_VOICE_CONTEXT_ASSETS}")
+endif()
+if(LAB_VOICE_LOGMEL_ENABLED)
+  target_compile_definitions(${COMPONENT_LIB} PRIVATE LAB_VOICE_LOGMEL=1)
+  target_include_directories(${COMPONENT_LIB} PRIVATE "${LAB_VOICE_LOGMEL_ASSETS}")
+  set_source_files_properties("${LAB_ROOT}/components/voice/logmel_features.c"
+      PROPERTIES COMPILE_OPTIONS "-ffp-contract=off;-fno-fast-math")
 endif()

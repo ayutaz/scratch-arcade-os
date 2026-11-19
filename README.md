@@ -80,6 +80,8 @@ uv run --locked python tools/test.py
 
 Detailed engineering documents are currently in Japanese.
 
+An experimental [log-mel CNN backend](docs/voice-logmel-runtime.md) can also be selected with a verified numeric export. Its host integration does not establish device or real-voice quality.
+
 ## License
 
 Original code is [Apache-2.0](LICENSE). Third-party code and fonts keep their own licenses; see [NOTICE](NOTICE) and [third-party notices](THIRD_PARTY_NOTICES.md).

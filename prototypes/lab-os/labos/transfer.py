@@ -324,7 +324,7 @@ class Client:
             if not v['available']:
                 if any(values[2:]):raise ValueError('stale unavailable voice status')
             else:
-                if (not v['sequence'] or not v['lease_generation'] or v['model_revision'] not in (3,4) or
+                if (not v['sequence'] or not v['lease_generation'] or v['model_revision'] not in (3,4,5) or
                     not -1<=v['result']<=6 or v['features_ok']>1 or v['frames'] not in (0,32000) or
                     (v['result']>=0 and (not v['features_ok'] or v['frames']!=32000)) or
                     (v['result']==-1 and not v['errors'])):raise ValueError('voice status fields')
@@ -353,13 +353,13 @@ class Client:
             if not v['available']:
                 if any(values[2:]):raise ValueError('stale unavailable scores')
             else:
-                if (not v['sequence'] or not v['lease_generation'] or v['model_revision'] not in (3,4) or
+                if (not v['sequence'] or not v['lease_generation'] or v['model_revision'] not in (3,4,5) or
                     not 0<=v['result']<=6 or not 0<=v['top1']<=6 or not 0<=v['top2']<=6 or
                     v['top1']==v['top2'] or v['first_score_q10']<v['second_score_q10'] or
                     (v['first_score_q10']==v['second_score_q10'] and v['top1']>v['top2']) or
                     v['margin_q10']!=v['first_score_q10']-v['second_score_q10'] or
                     (v['model_revision']==3 and v['threshold_q10']!=995) or
-                    (v['model_revision']==4 and (v['threshold_q10']>4096 or v['top1']>=5 and v['threshold_q10']!=0))):raise ValueError('score fields')
+                    (v['model_revision'] in (4,5) and (v['threshold_q10']>4096 or v['top1']>=5 and v['threshold_q10']!=0))):raise ValueError('score fields')
                 expected=5 if v['top1']<5 and v['margin_q10']<v['threshold_q10'] else v['top1']
                 if v['result']!=expected:raise ValueError('inconsistent rejected result')
         except (ValueError,TypeError,struct.error):

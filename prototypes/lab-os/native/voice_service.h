@@ -9,11 +9,11 @@
 typedef struct {uint32_t top1,top2;int32_t first,second;uint32_t margin;} LabVoiceScores;
 int lab_voice_rank(const int32_t *,size_t,LabVoiceScores *);
 uint32_t lab_voice_rejection_threshold(uint32_t top_class);
-#if !LAB_VOICE_CONTEXT_DURATION
+#if !LAB_VOICE_CONTEXT_DURATION && !LAB_VOICE_LOGMEL
 uint32_t pet_rejection_threshold(void); /* Legacy global-threshold helper only. */
 #endif
 typedef struct {
-    _Alignas(8) uint8_t workspace[5680];
+    _Alignas(8) uint8_t workspace[LAB_VOICE_WORKSPACE_BYTES];
     float features[LAB_VOICE_FEATURE_COUNT];
     int32_t logits[7];
     uint32_t observed_owner,observed_generation,observed[16];
