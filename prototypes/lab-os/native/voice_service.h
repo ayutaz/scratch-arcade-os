@@ -4,7 +4,7 @@
 #include "audio_service.h"
 #include "voice_model_config.h"
 #include <stddef.h>
-/* Single OS actor; static caller-owned scratch, never guest memory. No I/O,
+/* Single OS actor; caller-owned scratch, never guest memory. No I/O,
  * allocation or model download until an explicit audio request. */
 typedef struct {uint32_t top1,top2;int32_t first,second;uint32_t margin;} LabVoiceScores;
 int lab_voice_rank(const int32_t *,size_t,LabVoiceScores *);
@@ -13,8 +13,18 @@ uint32_t lab_voice_rejection_threshold(uint32_t top_class);
 uint32_t pet_rejection_threshold(void); /* Legacy global-threshold helper only. */
 #endif
 typedef struct {
+#if LAB_VOICE_LOGMEL
+    union {
+        _Alignas(8) uint8_t workspace[LAB_VOICE_WORKSPACE_BYTES];
+        struct {
+            float features[LAB_VOICE_FEATURE_COUNT];
+            _Alignas(8) uint8_t inference_workspace[12288];
+        };
+    };
+#else
     _Alignas(8) uint8_t workspace[LAB_VOICE_WORKSPACE_BYTES];
     float features[LAB_VOICE_FEATURE_COUNT];
+#endif
     int32_t logits[7];
     uint32_t observed_owner,observed_generation,observed[16];
     LabVoiceScores scores;bool scores_valid;
