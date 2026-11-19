@@ -79,3 +79,5 @@ PR16のrun44564695682では`macos-15`のhost/target両jobがrunner未割当・st
 必須4job名/保護条件、全host試験、固定ESP-IDF build、read-only権限とreport境界は維持する。有料large/self-hostedへの変更や検査の省略は行わない。先行2契約で旧labelのRed→変更後Green。既存CI契約も回帰検査する。
 
 Intel指定のrun44566391991は準備段階で失敗した。固定Zig/host bootstrapがDarwin arm64専用である点を見落としていたため、`macos-26`（標準ARM64）へ修正した。旧失敗を成功に数えず、先行のarchitecture契約でIntel拒否のRedを再現し、同じ3契約と既存CI検査をGreen確認する。最新headの必須4CIを別に待つ。
+
+CI 44566816188ではS3 build/監査/文書検査が成功したが、新しいrunner契約テストの`tools` importが正規の`tools/test.py`経路で失敗した。CIと同じsys.pathで1件のRedを再現し、bootstrapを絶対パスのimportlibで読むfixtureへ修正。3件のGreen後、正規runnerの全755件も成功した。製品の音声処理/モデルは変更していない。

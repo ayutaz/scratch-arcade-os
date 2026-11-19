@@ -11,7 +11,10 @@ class ExplicitMacRunnerTests(unittest.TestCase):
 
  def test_labels_match_the_arm64_only_bootstrap_architecture(self):
   from unittest.mock import patch
-  import tools.bootstrap as bootstrap
+  import importlib.util
+  from test_ci import ROOT
+  spec=importlib.util.spec_from_file_location('explicit_runner_bootstrap',ROOT/'tools/bootstrap.py')
+  bootstrap=importlib.util.module_from_spec(spec);spec.loader.exec_module(bootstrap)
   labels={'macos-15-intel':'x86_64','macos-26':'arm64'}
   for name in ('host','target'):
    label=load('.github/workflows/host-tests.yml')['jobs'][name]['runs-on']
