@@ -2,6 +2,8 @@
 #include "board_boot.h"
 #include "resource_monitor.h"
 #include "voice_service.h"
+#include "audio_memory.h"
+#include <string.h>
 #include "state_mount.h"
 #include "lab_candidate.h"
 #include "esp_timer.h"
@@ -14,7 +16,15 @@
 static LabBoardBoot boot;
 /* Storage callbacks borrow this object until Home closes before FS unmount. */
 static LabStateMount app_state;
-static LabVoice voice;
+_Static_assert(sizeof(LabVoice)%sizeof(int16_t)==0,"voice allocation extent");
+static void *voice_acquire(void *unused) {
+    (void)unused;LabVoice *voice=(LabVoice *)lab_audio_pcm_alloc(sizeof(LabVoice)/sizeof(int16_t));
+    if(voice)memset(voice,0,sizeof(*voice));
+    return voice;
+}
+static bool voice_release(void *unused,void *voice) {
+    (void)unused;return lab_audio_pcm_free(voice,sizeof(LabVoice)/sizeof(int16_t));
+}
 /* Single-task RAM recorder. Debugger-visible; never printed to app USB. */
 LabResourceMonitor lab_candidate_resources;
 static uint32_t now(void) {return (uint32_t)(esp_timer_get_time()/1000);}
@@ -32,7 +42,8 @@ static void *os_main(void *unused) {
         .layout={LAB_CANDIDATE_ADDRESS,LAB_CANDIDATE_BYTES},.quota=LAB_CANDIDATE_QUOTA};
     capture(LAB_RESOURCE_BEFORE_BOOT);
     bool opened=lab_board_boot_open(&boot,&cfg,now());
-    if(opened && !lab_board_sound_set_voice(&boot.session.sound,&voice,lab_voice_call))opened=false;
+    const LabBoardVoice voice={NULL,voice_acquire,voice_release,lab_voice_call};
+    if(opened && !lab_board_sound_set_voice_factory(&boot.session.sound,&voice))opened=false;
     if(opened && boot.session.usb.active &&
        !lab_transfer_set_telemetry(&boot.session.usb.transfer,lab_resource_readout,&lab_candidate_resources))opened=false;
     if(opened && !lab_state_mount_attach(&app_state,&boot.session.home,&boot.volume.fs,true))opened=false;

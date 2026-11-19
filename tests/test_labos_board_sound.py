@@ -87,3 +87,43 @@ class BoardSoundTests(unittest.TestCase):
         self.assertEqual((self.metric(0),self.mem(2)),(32000,64000))
         self.assertLessEqual(self.mem(5),8192)
         self.assertTrue(self.lib.test_sound_close(self.rig))
+
+class LazyVoiceFactoryTests(unittest.TestCase):
+    setUp=BoardSoundTests.setUp
+    init=BoardSoundTests.init
+    metric=BoardSoundTests.metric
+    mem=BoardSoundTests.mem
+    @classmethod
+    def setUpClass(cls):
+        BoardSoundTests.setUpClass.__func__(cls)
+        cls.lib.test_sound_voice.argtypes=[C.c_void_p]
+        for name in ('test_sound_factory','test_sound_factory_metric','test_sound_factory_fault'):getattr(cls.lib,name).argtypes=[C.c_void_p,C.c_uint]
+    def factory(self):self.assertTrue(self.lib.test_sound_factory(self.rig,0))
+    def voice(self,i):return self.lib.test_sound_factory_metric(self.rig,i)
+    def test_factory_is_lazy_and_speaker_network_apps_never_reserve_recognition_memory(self):
+        self.init();self.factory();self.assertEqual(self.voice(0),0)
+        self.assertTrue(self.lib.test_sound_open(self.rig,10));self.assertEqual(self.voice(0),0);self.assertEqual(self.mem(2),32000);self.assertTrue(self.lib.test_sound_close(self.rig))
+        self.assertTrue(self.lib.test_sound_open(self.rig,7));self.assertEqual(self.voice(0),1);self.assertEqual(self.lib.test_sound_command(self.rig,9,0,0),6);self.assertTrue(self.lib.test_sound_close(self.rig));self.assertEqual((self.voice(1),self.voice(2),self.voice(3)),(1,0,0))
+    def test_factory_acquire_failure_never_allocates_pcm_or_opens_gpio(self):
+        self.init();self.factory();self.lib.test_sound_factory_fault(self.rig,1)
+        self.assertFalse(self.lib.test_sound_open(self.rig,7));self.assertEqual((self.mem(2),self.lib.test_audio_calls(0)),(0,0));self.assertTrue(self.lib.test_sound_close(self.rig))
+    def test_partial_pcm_failure_retains_owned_context_until_close(self):
+        self.init();self.factory();self.lib.test_audio_memory_fault(1,0)
+        self.assertFalse(self.lib.test_sound_open(self.rig,7));self.assertEqual(self.voice(2),1);self.assertFalse(self.lib.test_sound_open(self.rig,3));self.assertTrue(self.lib.test_sound_close(self.rig));self.assertEqual((self.voice(1),self.voice(2)),(1,0))
+    def test_driver_cleanup_failure_retains_context_and_pcm_until_retry(self):
+        self.init();self.factory();self.assertTrue(self.lib.test_sound_open(self.rig,7));self.lib.test_sound_command(self.rig,1,1000,20);self.lib.test_audio_fault(7)
+        self.assertFalse(self.lib.test_sound_close(self.rig));self.assertEqual((self.voice(1),self.voice(2),self.mem(2)),(0,1,64000));self.lib.test_audio_fault(0);self.assertTrue(self.lib.test_sound_close(self.rig));self.assertEqual((self.voice(1),self.voice(3)),(1,0))
+    def test_factory_release_failure_blocks_reopen_and_retains_remaining_resources(self):
+        self.init();self.factory();self.assertTrue(self.lib.test_sound_open(self.rig,7));self.lib.test_sound_factory_fault(self.rig,2)
+        self.assertFalse(self.lib.test_sound_close(self.rig));self.assertEqual((self.voice(2),self.mem(2)),(1,64000));self.assertFalse(self.lib.test_sound_open(self.rig,3));self.lib.test_sound_factory_fault(self.rig,0);self.assertTrue(self.lib.test_sound_close(self.rig));self.assertEqual(self.voice(1),1)
+    def test_pcm_free_retry_never_frees_recognition_context_twice(self):
+        self.init();self.factory();self.assertTrue(self.lib.test_sound_open(self.rig,7));self.lib.test_audio_memory_fault(0,1)
+        self.assertFalse(self.lib.test_sound_close(self.rig));self.assertEqual((self.voice(1),self.voice(2)),(1,0));self.lib.test_audio_memory_fault(0,0);self.assertTrue(self.lib.test_sound_close(self.rig));self.assertEqual(self.voice(1),1)
+    def test_factory_requires_complete_callbacks_and_cannot_rebind_live_owner(self):
+        self.assertFalse(self.lib.test_sound_factory(self.rig,0));self.init()
+        for kind in (1,2,3,4):self.assertFalse(self.lib.test_sound_factory(self.rig,kind))
+        self.factory();self.assertTrue(self.lib.test_sound_open(self.rig,7));self.assertFalse(self.lib.test_sound_factory(self.rig,0));self.assertFalse(self.lib.test_sound_voice(self.rig));self.assertTrue(self.lib.test_sound_close(self.rig));self.assertTrue(self.lib.test_sound_voice(self.rig));self.factory()
+
+class CandidateVoiceStorageTests(unittest.TestCase):
+    def test_candidate_uses_internal_lazy_factory_instead_of_large_static_voice(self):
+        text=(ROOT/'firmware/esp-idf/lab-os-core/main/candidate_main.c').read_text();self.assertNotIn('static LabVoice voice;',text);self.assertIn('lab_board_sound_set_voice_factory',text);self.assertIn('lab_audio_pcm_alloc',text);self.assertIn('lab_audio_pcm_free',text)

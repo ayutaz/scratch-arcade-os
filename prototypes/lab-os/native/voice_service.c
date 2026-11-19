@@ -86,7 +86,15 @@ static int observe_finish(LabVoice *v,int result) {
 }
 int lab_voice_call(void *context,LabAudio *audio,uint32_t owner,uint32_t op,uint32_t value,uint32_t now) {
     LabVoice *voice=context;
-    if(!voice || !audio || !audio->ready || !owner || audio->owner!=owner)return -1;
+    if(!audio || !audio->ready || !owner || audio->owner!=owner)return -1;
+    if(op==LAB_VM_AUDIO_REPLY) {
+        if(!(audio->permissions&LAB_AUDIO_CAN_PLAY) || value>=5)return -1;
+        if(audio->driver_owned || audio->phase!=LAB_AUDIO_IDLE)return 0;
+        const PetReplyClip *clip=&pet_replies[value];
+        if(clip->frames*2>audio->capacity)return -1;
+        return lab_audio_play_pcm8(audio,owner,clip->samples,clip->frames,now);
+    }
+    if(!voice)return -1;
     if(op==LAB_AUDIO_VOICE_SNAPSHOT) {
         if(!(audio->permissions&LAB_AUDIO_CAN_RECORD) || value>17)return -1;
         bool current=voice->observed_owner==owner && voice->observed_generation==audio->lease_generation && voice->observed[0];
@@ -132,12 +140,6 @@ int lab_voice_call(void *context,LabAudio *audio,uint32_t owner,uint32_t op,uint
         }
         return observe_finish(voice,result);
     }
-    if(op==LAB_VM_AUDIO_REPLY) {
-        if(!(audio->permissions&LAB_AUDIO_CAN_PLAY) || value>=5)return -1;
-        if(audio->driver_owned || audio->phase!=LAB_AUDIO_IDLE)return 0;
-        const PetReplyClip *clip=&pet_replies[value];
-        if(clip->frames*2>audio->capacity)return -1;
-        return lab_audio_play_pcm8(audio,owner,clip->samples,clip->frames,now);
-    }
+
     return -1;
 }

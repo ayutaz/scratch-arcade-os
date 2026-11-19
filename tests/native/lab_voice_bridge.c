@@ -50,3 +50,5 @@ int voice_native_status(void *p,unsigned owner,unsigned field){
 int voice_native_score_status(void *p,unsigned owner,unsigned field){
  Rig *r=p;return lab_voice_call(&r->voice,&r->audio,owner,65537,field,0);
 }
+
+void voice_detach_context(void *p){((Rig*)p)->audio.voice_context=NULL;}
