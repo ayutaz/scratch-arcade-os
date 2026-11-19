@@ -98,7 +98,7 @@ class ContextVoiceClientTests(unittest.TestCase):
             self.assertEqual(r['threshold_q10'],threshold)
 
     def test_unknown_revision_out_of_range_or_noncommand_threshold_are_refused(self):
-        for revision,top1,threshold in ((5,0,977),(4,0,4097),(4,6,1)):
+        for revision,top1,threshold in ((6,0,977),(4,0,4097),(4,6,1)):
             v=[1,1,1,5 if top1<5 else top1,top1,2,100,99,1,threshold,revision,2000,1]
             c=self.client(struct.pack('<3Ii2I2i5I',*v)+bytes(28))
             with self.assertRaises(TransferError):c.voice_scores()

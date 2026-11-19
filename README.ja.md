@@ -80,6 +80,8 @@ TDDとPRの流れは[貢献手順（英語）](CONTRIBUTING.md)を参照して�
 
 詳細な開発ドキュメントは現在、日本語で記載しています。
 
+実験用の[log-mel CNN音声処理](docs/voice-logmel-runtime.md)も、検証した数値exportで明示選択できます。ホスト接続の成功を実機・実声の品質保証とは扱いません。
+
 ## ライセンス
 
 自作コードは[Apache-2.0](LICENSE)です。第三者コードやフォントには、それぞれのライセンスが適用されます。[NOTICE](NOTICE)と[第三者の権利表示](THIRD_PARTY_NOTICES.md)を参照してください。

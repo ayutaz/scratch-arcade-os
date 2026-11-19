@@ -1,0 +1,15 @@
+{
+  "repository": "https://github.com/ayutaz/arcade-ai-pet",
+  "commit": "b5e3dce6fae2fd96d01089310f23196bf3d1c55c",
+  "license": "Apache-2.0",
+  "files": {
+    "dscnn.c": "7bdbd973be2fa57fe85ffab0aaab16f22784ae4dc4b05b1f26b8fb321ffadcf4",
+    "dscnn.h": "f2e1f54d46e3af07131f6ff4f12df59a0aedb21c8efef94a662c1dd2fe65adbd",
+    "logmel_features.c": "b87a59e6fdb7719e369a39d5df5d3a45bbd04f5b7478603ce00df453d303df1e",
+    "logmel_features.h": "80d04f657e00aa5d3c231b9bdcbe678c3b03a66f67ce0699ef366d8335f127d4",
+    "logmel_tables.h": "bd9ff5df6f6033179122c5f957bb6cbeaf1445d643dc1ef861153f6bfa0da110"
+  },
+  "model_weights_included": false,
+  "device_tested": false,
+  "mathematical_tables_generated_from": "arcade_ai_pet/logmel_native.py"
+}
