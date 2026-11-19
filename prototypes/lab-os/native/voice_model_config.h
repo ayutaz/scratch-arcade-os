@@ -1,0 +1,12 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+#ifndef LAB_VOICE_MODEL_CONFIG_H
+#define LAB_VOICE_MODEL_CONFIG_H
+#ifndef LAB_VOICE_CONTEXT_DURATION
+#define LAB_VOICE_CONTEXT_DURATION 0
+#endif
+#if LAB_VOICE_CONTEXT_DURATION != 0 && LAB_VOICE_CONTEXT_DURATION != 1
+#error "Select exactly one supported voice runtime"
+#endif
+enum { LAB_VOICE_FEATURE_COUNT=LAB_VOICE_CONTEXT_DURATION ? 261:260,
+       LAB_VOICE_MODEL_REVISION=LAB_VOICE_CONTEXT_DURATION ? 4:3 };
+#endif

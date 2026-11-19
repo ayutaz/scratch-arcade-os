@@ -64,7 +64,9 @@ PYTHONPATH=prototypes/lab-os uv run --locked python -m labos.target build-candid
 
 This only builds the firmware. `scripts/flash.sh` refuses device writes.
 
-One board runs the separately reviewed v3 voice firmware, but voice recognition still misses the device quality target. New ranking diagnostics pass host tests and an ESP32-S3 build; they are not installed on the board. See the [voice-service record](docs/voice-service.md), [validation](docs/validation.md) and [development instructions](docs/development.md).
+One board runs the separately reviewed v3 voice firmware with ranking diagnostics. Voice recognition still misses the device quality target: the latest human trial scored 6/15 commands. See the [voice-service record](docs/voice-service.md), [validation](docs/validation.md) and [development instructions](docs/development.md).
+
+An optional [261-feature voice runtime](docs/voice-context-runtime.md) is available for host experiments with a separately verified model export. Device acceptance is still pending.
 
 ## Make your own app
 

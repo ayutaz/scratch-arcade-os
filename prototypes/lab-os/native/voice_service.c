@@ -3,14 +3,37 @@
 #include "guest_vm.h"
 #include "channel_features.h"
 #include "replies.h"
+#if LAB_VOICE_CONTEXT_DURATION
+#include "decision_features.h"
+#include "decision_model.h"
+#define VOICE_SCRATCH pet_decision_feature_scratch_size
+#define VOICE_EXTRACT pet_decision_features
+#define VOICE_EXTRACT_BANKED pet_decision_features_banked
+#define VOICE_PREDICT pet_decision_predict
+#else
 #include "pet_model.h"
+#define VOICE_SCRATCH pet_channel_feature_scratch_size
+#define VOICE_EXTRACT pet_channel_features
+#define VOICE_EXTRACT_BANKED pet_channel_features_banked
+#define VOICE_PREDICT pet_predict
+#endif
 #include <string.h>
 _Static_assert(sizeof(LabVoice)<=8192,"bounded voice scratch");
 static void wipe(void *pointer,size_t count) {volatile uint8_t *p=pointer;while(count--)*p++=0;}
 static void scrub_voice(LabVoice *v) {
     wipe(v->workspace,sizeof(v->workspace));wipe(v->features,sizeof(v->features));wipe(v->logits,sizeof(v->logits));
 }
-uint32_t pet_rejection_threshold(void) {return PET_THRESHOLD;}
+uint32_t lab_voice_rejection_threshold(uint32_t top_class) {
+    if(top_class>6)return UINT32_MAX;
+#if LAB_VOICE_CONTEXT_DURATION
+    return top_class<5 ? (uint32_t)pet_decision_thresholds[top_class]:0;
+#else
+    return PET_THRESHOLD;
+#endif
+}
+#if !LAB_VOICE_CONTEXT_DURATION
+uint32_t pet_rejection_threshold(void) {return lab_voice_rejection_threshold(0);}
+#endif
 int lab_voice_rank(const int32_t *logits,size_t count,LabVoiceScores *out) {
     if(!out)return 0;
     memset(out,0,sizeof(*out));
@@ -35,7 +58,7 @@ static void observe_begin(LabVoice *v,const LabAudio *a,uint32_t owner,uint32_t 
     }
     wipe(v->observed,sizeof(v->observed));wipe(&v->scores,sizeof(v->scores));v->scores_valid=false;v->observed_owner=owner;v->observed_generation=a->lease_generation;
     v->observed[0]=seq==UINT32_MAX ? 1:seq+1;v->observed[1]=UINT32_MAX;v->observed[2]=errors;
-    v->observed[14]=3;v->observed[15]=now;
+    v->observed[14]=LAB_VOICE_MODEL_REVISION;v->observed[15]=now;
 }
 static int observe_finish(LabVoice *v,int result) {
     if(result<-1 || result>6)result=-1;
@@ -61,7 +84,7 @@ int lab_voice_call(void *context,LabAudio *audio,uint32_t owner,uint32_t op,uint
         if(!value)return 1;
         uint32_t fields[]={voice->observed[0],voice->observed[1],voice->scores.top1,voice->scores.top2,
             (uint32_t)voice->scores.first,(uint32_t)voice->scores.second,voice->scores.margin,
-            pet_rejection_threshold(),voice->observed[14],voice->observed[15],voice->observed_generation};
+            lab_voice_rejection_threshold(voice->scores.top1),voice->observed[14],voice->observed[15],voice->observed_generation};
         return (int32_t)fields[value-1];
     }
     if(op==LAB_VM_AUDIO_CLASSIFY) {
@@ -78,15 +101,15 @@ int lab_voice_call(void *context,LabAudio *audio,uint32_t owner,uint32_t op,uint
         voice->observed[11]=(uint32_t)chunk_mean(audio,0);
         voice->observed[12]=(uint32_t)chunk_mean(audio,PET_AUDIO_SAMPLES-1024);
         int result=-1;
-        if(pet_channel_feature_scratch_size()<=sizeof(voice->workspace)) {
+        if(VOICE_SCRATCH()<=sizeof(voice->workspace)) {
             int prepared=audio->buffer ? pet_channel_prepare(audio->buffer,32000):pet_channel_prepare_banked(audio->banks,32000);
-            if(prepared==1)result=audio->buffer ? pet_channel_features(audio->buffer,32000,voice->features,260,voice->workspace,sizeof(voice->workspace)) :
-                pet_channel_features_banked((const int16_t *const *)audio->banks,32000,voice->features,260,voice->workspace,sizeof(voice->workspace));
+            if(prepared==1)result=audio->buffer ? VOICE_EXTRACT(audio->buffer,32000,voice->features,LAB_VOICE_FEATURE_COUNT,voice->workspace,sizeof(voice->workspace)) :
+                VOICE_EXTRACT_BANKED((const int16_t *const *)audio->banks,32000,voice->features,LAB_VOICE_FEATURE_COUNT,voice->workspace,sizeof(voice->workspace));
         }
         voice->observed[13]=result==1;
         if(!lab_audio_forget_recording(audio,owner))result=-1;
         if(result==1) {
-            result=pet_predict(voice->features,260,voice->logits,7);
+            result=VOICE_PREDICT(voice->features,LAB_VOICE_FEATURE_COUNT,voice->logits,7);
             if(result>=0)voice->scores_valid=lab_voice_rank(voice->logits,7,&voice->scores)==1;
         }
         return observe_finish(voice,result);
