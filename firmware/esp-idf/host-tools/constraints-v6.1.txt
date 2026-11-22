@@ -330,7 +330,7 @@ winrt-windows-devices-bluetooth <=4!10.0.28000.2705; sys_platform == "win32" and
 winrt-windows-devices-bluetooth-advertisement <=3.2.1; sys_platform == "win32" and python_version < "3.11"
 winrt-windows-devices-bluetooth-advertisement <=4!10.0.28000.2705; sys_platform == "win32" and python_version >= "3.11" and python_version < "3.16"
 winrt-windows-devices-bluetooth-genericattributeprofile <=3.2.1; sys_platform == "win32" and python_version < "3.11"
-winrt-windows-devices-bluetooth-genericattributeprofile <=4!10.0.28000.2705; sys_platform == "win32" and python_version >= "3.11" and python_version < "3.16"
+winrt-windows-devices-bluetooth-genericattributeprofile <=4!10.0.28000.2957; sys_platform == "win32" and python_version >= "3.11" and python_version < "3.16"
 winrt-windows-devices-enumeration <=3.2.1; sys_platform == "win32" and python_version < "3.11"
 winrt-windows-devices-enumeration <=4!10.0.28000.2705; sys_platform == "win32" and python_version >= "3.11" and python_version < "3.16"
 winrt-windows-devices-radios <=3.2.1; sys_platform == "win32" and python_version < "3.11"
